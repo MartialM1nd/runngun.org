@@ -10,6 +10,8 @@
   },
   "dependencies": {
     "@fontsource-variable/inter": "^5.2.6",
+    "@fontsource/barlow-condensed": "^5.2.8",
+    "@fontsource/oswald": "^5.2.8",
     "@getalby/sdk": "^5.1.1",
     "@hookform/resolvers": "^5.2.2",
     "@nostrify/nostrify": "^0.51.0",
@@ -66,6 +68,7 @@
     "recharts": "^2.12.7",
     "tailwind-merge": "^2.5.2",
     "tailwindcss-animate": "^1.0.7",
+    "uuid": "^13.0.0",
     "vaul": "^0.9.3",
     "zod": "^4.3.6"
   },
@@ -80,6 +83,7 @@
     "@types/qrcode": "^1.5.5",
     "@types/react": "^18.3.1",
     "@types/react-dom": "^18.3.1",
+    "@types/uuid": "^11.0.0",
     "@vitejs/plugin-react": "^6.0.1",
     "@webbtc/webln-types": "^3.0.0",
     "autoprefixer": "^10.4.20",
