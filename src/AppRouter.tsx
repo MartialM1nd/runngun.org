@@ -4,6 +4,7 @@ import { ScrollToTop } from "./components/ScrollToTop";
 import Index from "./pages/Index";
 import Admin from "./pages/Admin";
 import Calendar from "./pages/Calendar";
+import Schedule from "./pages/Schedule";
 import { NIP19Page } from "./pages/NIP19Page";
 import NotFound from "./pages/NotFound";
 
@@ -13,6 +14,8 @@ export function AppRouter() {
       <ScrollToTop />
       <Routes>
         <Route path="/" element={<Index />} />
+        {/* Schedule page with infinite scroll */}
+        <Route path="/schedule" element={<Schedule />} />
         {/* Calendar page */}
         <Route path="/calendar" element={<Calendar />} />
         {/* Admin panel — Nostr auth gated */}

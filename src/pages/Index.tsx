@@ -1,5 +1,5 @@
 import { useSeoMeta } from '@unhead/react';
-import { Target, ChevronDown, Shield } from 'lucide-react';
+import { Target, Shield } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useCalendarEvents, splitEvents } from '@/hooks/useCalendarEvents';
 import { EventCard, EventCardSkeleton } from '@/components/EventCard';
@@ -13,7 +13,7 @@ const Index = () => {
   });
 
   const { data: events, isLoading, isError } = useCalendarEvents();
-  const { upcoming, past } = events ? splitEvents(events) : { upcoming: [], past: [] };
+  const { upcoming, past } = events ? splitEvents(events) : { upcoming: [] };
 
   return (
     <div className="min-h-screen bg-background font-sans">
@@ -34,7 +34,7 @@ const Index = () => {
           }}
         />
 
-        <div className="container mx-auto px-4 py-20 sm:py-28 text-center">
+        <div className="container mx-auto px-4 py-15 sm:py-21 text-center">
           {/* Icon badge */}
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-full border border-primary/40 bg-primary/10 mb-6 animate-fade-in">
             <Target className="w-8 h-8 text-primary" />
@@ -60,11 +60,9 @@ const Index = () => {
             <Button
               size="lg"
               className="font-condensed text-lg font-bold tracking-wide uppercase bg-primary text-primary-foreground hover:bg-primary/90 px-8"
-              onClick={() => {
-                document.getElementById('events')?.scrollIntoView({ behavior: 'smooth' });
-              }}
+              asChild
             >
-              View Schedule
+              <a href="/schedule">View Schedule</a>
             </Button>
             <Button
               size="lg"
@@ -75,11 +73,6 @@ const Index = () => {
               <a href="/calendar">View Calendar</a>
             </Button>
             
-          </div>
-
-          {/* Scroll hint */}
-          <div className="mt-14 flex justify-center animate-pulse-amber">
-            <ChevronDown className="w-5 h-5 text-primary/50" />
           </div>
         </div>
       </header>
@@ -109,24 +102,12 @@ const Index = () => {
 
           {!isLoading && !isError && upcoming.length > 0 && (
             <div className="space-y-3">
-              {upcoming.map((ev) => (
+              {upcoming.slice(0, 10).map((ev) => (
                 <EventCard key={ev.event.id} calEvent={ev} />
               ))}
             </div>
           )}
         </section>
-
-        {/* Past Events */}
-        {!isLoading && past.length > 0 && (
-          <section className="mt-14">
-            <SectionHeader label="Past Events" />
-            <div className="space-y-3">
-              {past.map((ev) => (
-                <EventCard key={ev.event.id} calEvent={ev} isPast />
-              ))}
-            </div>
-          </section>
-        )}
       </main>
 
       {/* ── Footer ──────────────────────────────────────────────── */}
