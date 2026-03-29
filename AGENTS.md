@@ -1207,3 +1207,222 @@ The validation ensures code quality and catches errors before deployment, regard
 If git is available in your environment (through a `shell` tool, or other git-specific tools), you should utilize `git log` to understand project history. Use `git status` and `git diff` to check the status of your changes, and if you make a mistake use `git checkout` to restore files.
 
 When your changes are complete and validated, create a git commit with a descriptive message summarizing your changes.
+
+---
+
+## Build, Lint, and Test Commands
+
+### Available npm Scripts
+
+```bash
+# Development server
+npm run dev
+
+# Build for production
+npm run build
+
+# Full test suite (type-check + lint + vitest + build)
+npm test
+
+# Run a single test file
+npx vitest run src/hooks/useCalendarEvents.test.ts
+
+# Run tests in watch mode
+npx vitest src/hooks/
+
+# TypeScript type checking only
+npx tsc --noEmit
+
+# ESLint check only
+npx eslint src/
+
+# Build only (validates compilation)
+npm run build
+```
+
+### Running Tests
+
+The full test command (`npm test`) runs:
+1. `npm i --silent` - Install dependencies
+2. `tsc --noEmit` - TypeScript type checking
+3. `eslint` - Linting
+4. `vitest run` - Test execution
+5. `vite build` - Production build
+
+**To run a single test file**, use:
+```bash
+npx vitest run src/hooks/useCalendarEvents.test.ts
+```
+
+**To run tests matching a pattern**, use:
+```bash
+npx vitest run --grep "useCalendarEvents"
+```
+
+---
+
+## Code Style Guidelines
+
+### Imports and Path Aliases
+
+- Use the `@/` prefix for absolute imports (e.g., `@/hooks/useNostr`)
+- Order imports: 1) React/stdlib, 2) External libraries, 3) Internal components/hooks
+- Use named imports instead of default imports where possible
+
+```typescript
+// ✅ Good
+import { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { useNostr } from '@nostrify/react';
+import { Button } from '@/components/ui/button';
+import { useCalendarEvents } from '@/hooks/useCalendarEvents';
+
+// ❌ Bad
+import React, { useState } from 'react';
+import useQuery from '@tanstack/react-query';
+import MyComponent from '@/components/MyComponent';
+```
+
+### TypeScript Guidelines
+
+- **Never use `any`**: Always use proper TypeScript types
+- Use explicit return types for utility functions
+- Use interface for object shapes, type for unions/aliases
+
+```typescript
+// ✅ Good
+interface CalendarEvent {
+  event: NostrEvent;
+  title: string;
+  start: number;
+  end?: number;
+}
+
+// ❌ Bad - never use any
+function processEvent(event: any): any { ... }
+```
+
+### Naming Conventions
+
+- **Components**: PascalCase (e.g., `EventCard`, `RSVPButton`)
+- **Hooks**: camelCase with "use" prefix (e.g., `useCalendarEvents`, `usePublishRSVP`)
+- **Types/Interfaces**: PascalCase (e.g., `CalendarEvent`, `RSVPEvent`)
+- **Constants**: SCREAMING_SNAKE_CASE (e.g., `ADMIN_PUBKEYS`, `PAGE_SIZE`)
+- **Files**: kebab-case (e.g., `use-calendar-events.ts`, `event-card.tsx`)
+
+### Error Handling
+
+- Always handle errors in `mutate` callbacks with `onError`
+- Use toast notifications for user-facing errors
+- Log errors to console for debugging
+
+```typescript
+// ✅ Good
+mutate(
+  { kind: 1, content: text },
+  {
+    onSuccess: () => { toast({ title: 'Success' }); },
+    onError: (err) => {
+      console.error('Failed to publish:', err);
+      toast({ title: 'Error', variant: 'destructive' });
+    },
+  }
+);
+
+// ❌ Bad - no error handling
+mutate({ kind: 1, content: text });
+```
+
+### Component Structure
+
+- Use `forwardRef` for components that need ref forwarding
+- Define prop interfaces separately for reusability
+- Keep components focused and single-purpose
+
+```typescript
+// ✅ Good
+interface EventCardProps {
+  calEvent: CalendarEvent;
+  isPast?: boolean;
+}
+
+export function EventCard({ calEvent, isPast = false }: EventCardProps) {
+  // ...
+}
+```
+
+### Conditional Rendering
+
+- Use early returns for loading/error states
+- Keep conditional logic simple and readable
+- Use skeleton components for loading states
+
+```typescript
+// ✅ Good
+if (isLoading) return <EventCardSkeleton />;
+if (isError) return <ErrorMessage />;
+if (!events?.length) return <EmptyState />;
+
+// ❌ Bad - nested ternaries
+return (
+  <div>
+    {isLoading ? <Skeleton /> : isError ? <Error /> : events.length ? <List /> : <Empty />}
+  </div>
+);
+```
+
+### Hook Patterns
+
+- Always use TanStack Query's `useQuery` with proper query keys
+- Invalidate related queries after mutations
+- Use signal from queryFn for abort support
+
+```typescript
+// ✅ Good
+return useQuery({
+  queryKey: ['calendar-events', year, month],
+  queryFn: async ({ signal }) => {
+    const events = await nostr.query([{ kinds: [31923] }], { signal });
+    return events.filter(validateCalendarEvent);
+  },
+  staleTime: 60_000,
+});
+```
+
+### CSS and Styling
+
+- Use Tailwind CSS utility classes
+- Use `cn()` utility for conditional class merging
+- Follow the 8px grid system for spacing
+- Use semantic color tokens (e.g., `text-primary`, `bg-background`)
+
+```typescript
+// ✅ Good
+<div className={cn(
+  "flex items-center gap-2 px-4 py-2",
+  isActive && "bg-primary text-primary-foreground",
+  className
+)} />
+
+// ❌ Bad - inline styles
+<div style={{ display: 'flex', padding: '16px', backgroundColor: '#000' }} />
+```
+
+### Async/Await Patterns
+
+- Always handle promise rejections with try/catch
+- Use async/await consistently, not mixed with .then()
+- Handle loading states appropriately
+
+---
+
+## Validation Requirements
+
+Before completing any task:
+
+1. Run `npm run build` - must pass without errors
+2. Run `npx tsc --noEmit` - must pass without errors  
+3. Run `npx eslint src/` - should have no critical errors
+4. Create a git commit with descriptive message
+
+Your task is not complete until all validation steps pass.
