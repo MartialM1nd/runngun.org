@@ -17,6 +17,11 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ADMIN_PUBKEYS } from '@/lib/admins';
+import { RSVPButton } from '@/components/RSVPButton';
+import { RSVPList } from '@/components/RSVPList';
+import { CommentForm } from '@/components/CommentForm';
+import { CommentSection } from '@/components/CommentSection';
+import { useEventRSVPs } from '@/hooks/useEventRSVPs';
 import type { NostrEvent } from '@nostrify/nostrify';
 import NotFound from './NotFound';
 
@@ -67,7 +72,7 @@ function EventDetailView({ event }: { event: NostrEvent }) {
   const isPast = effectiveEnd !== null && effectiveEnd < now;
 
   useSeoMeta({
-    title: `${title} — Run & Gun`,
+    title: `${title} — runngun.org`,
     description: summary || content || `Run & Gun event: ${title}`,
     ogImage: image,
   });
@@ -214,6 +219,32 @@ function EventDetailView({ event }: { event: NostrEvent }) {
           </>
         )}
 
+        <Separator className="my-6" />
+
+        {/* RSVP Section */}
+        <div>
+          <h2 className="font-condensed text-lg font-bold uppercase tracking-wide text-foreground mb-4">
+            Who's Going
+          </h2>
+          <RSVPButton eventNaddr={buildNaddr(event)} />
+          <div className="mt-4">
+            <RSVPListWithData eventNaddr={buildNaddr(event)} />
+          </div>
+        </div>
+
+        <Separator className="my-6" />
+
+        {/* Comments Section */}
+        <div>
+          <h2 className="font-condensed text-lg font-bold uppercase tracking-wide text-foreground mb-4">
+            Comments
+          </h2>
+          <CommentForm eventId={event.id} authorPubkey={event.pubkey} />
+          <div className="mt-4">
+            <CommentSection eventId={event.id} authorPubkey={event.pubkey} />
+          </div>
+        </div>
+
         {/* Back button */}
         <div className="mt-10">
           <Button variant="outline" asChild className="font-condensed font-bold uppercase tracking-wide">
@@ -250,6 +281,21 @@ function DetailRow({
       </div>
     </div>
   );
+}
+
+function buildNaddr(event: NostrEvent): string {
+  const d = event.tags.find(([t]) => t === 'd')?.[1] ?? '';
+  return nip19.naddrEncode({
+    kind: 31923,
+    pubkey: event.pubkey,
+    identifier: d,
+  });
+}
+
+function RSVPListWithData({ eventNaddr }: { eventNaddr: string }) {
+  const { data, isLoading } = useEventRSVPs(eventNaddr);
+  if (isLoading) return <div className="text-muted-foreground text-sm">Loading...</div>;
+  return <RSVPList going={data?.going ?? []} tentative={data?.tentative ?? []} />;
 }
 
 function CalendarEventLoader({ kind, pubkey, identifier }: { kind: number; pubkey: string; identifier: string }) {

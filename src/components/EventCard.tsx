@@ -1,7 +1,14 @@
 import { Link } from 'react-router-dom';
 import { nip19 } from 'nostr-tools';
-import { MapPin, Clock, ExternalLink, Calendar } from 'lucide-react';
+import { MapPin, Clock, ExternalLink, Calendar, Users } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
+import { useAuthor } from '@/hooks/useAuthor';
+import { genUserName } from '@/lib/genUserName';
+import { useEventRSVPs, useEventRSVPCount } from '@/hooks/useEventRSVPs';
+import { usePublishRSVP } from '@/hooks/usePublishRSVP';
+import { Loader2 } from 'lucide-react';
 import type { CalendarEvent } from '@/hooks/useCalendarEvents';
 import { ADMIN_PUBKEYS } from '@/lib/admins';
 
@@ -66,6 +73,101 @@ function getMonthAbbr(start: number): string {
 
 function getDayNum(start: number): string {
   return new Date(start * 1000).toLocaleDateString('en-US', { day: 'numeric' });
+}
+
+function RSVPPreview({ naddr }: { naddr: string }) {
+  const { goingCount, tentativeCount, isLoading } = useEventRSVPCount(naddr);
+  const { mutateAsync: publishRSVP, isPending } = usePublishRSVP();
+  const { data: rsvps } = useEventRSVPs(naddr);
+  const total = goingCount + tentativeCount;
+  
+  const currentStatus = rsvps?.currentUserStatus ?? null;
+
+  const handleGoing = () => publishRSVP(naddr, 'going');
+  const handleMaybe = () => publishRSVP(naddr, 'tentative');
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-between gap-2 px-5 py-3 border-t border-border/50 bg-muted/20">
+        <div className="flex items-center gap-2">
+          <Users className="w-4 h-4 text-muted-foreground/50" />
+          <span className="text-xs text-muted-foreground">Loading...</span>
+        </div>
+      </div>
+    );
+  }
+
+  const allPubkeys: string[] = [];
+  if (rsvps) {
+    allPubkeys.push(...rsvps.going.map(r => r.pubkey));
+    allPubkeys.push(...rsvps.tentative.map(r => r.pubkey));
+  }
+  const previewPubkeys = allPubkeys.slice(0, 10);
+
+  return (
+    <div className="flex items-center justify-between gap-2 px-5 py-3 border-t border-border/50 bg-muted/20">
+      <div className="flex items-center gap-3 flex-1 min-w-0">
+        <div className="flex -space-x-2 shrink-0">
+          {previewPubkeys.map((pubkey) => (
+            <RSVPAvatar key={pubkey} pubkey={pubkey} />
+          ))}
+        </div>
+        <div className="flex items-center gap-2 text-xs truncate">
+          {goingCount > 0 && (
+            <span className="text-primary font-medium">{goingCount} going</span>
+          )}
+          {goingCount > 0 && tentativeCount > 0 && (
+            <span className="text-muted-foreground">·</span>
+          )}
+          {tentativeCount > 0 && (
+            <span className="text-muted-foreground">{tentativeCount} maybe</span>
+          )}
+          {total > 10 && (
+            <span className="text-muted-foreground">+{total - 10}</span>
+          )}
+          {total === 0 && (
+            <span className="text-xs text-muted-foreground">Be the first to RSVP!</span>
+          )}
+        </div>
+      </div>
+      
+      <div className="flex items-center gap-1 shrink-0">
+        <Button
+          size="sm"
+          variant={currentStatus === 'going' ? 'default' : 'outline'}
+          onClick={handleGoing}
+          disabled={isPending}
+          className="h-7 px-2 text-xs font-condensed font-bold uppercase"
+        >
+          {currentStatus === 'going' ? '✓' : ''} Going
+        </Button>
+        <Button
+          size="sm"
+          variant={currentStatus === 'tentative' ? 'default' : 'outline'}
+          onClick={handleMaybe}
+          disabled={isPending}
+          className="h-7 px-2 text-xs font-condensed font-bold uppercase"
+        >
+          {currentStatus === 'tentative' ? '✓' : ''} Maybe
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+function RSVPAvatar({ pubkey }: { pubkey: string }) {
+  const { data: author } = useAuthor(pubkey);
+  const name = author?.metadata?.name ?? genUserName(pubkey);
+  const picture = author?.metadata?.picture;
+
+  return (
+    <Avatar className="w-6 h-6 border-2 border-background">
+      <AvatarImage src={picture} />
+      <AvatarFallback className="text-[10px]">
+        {name.slice(0, 2).toUpperCase()}
+      </AvatarFallback>
+    </Avatar>
+  );
 }
 
 export function EventCard({ calEvent, isPast = false }: EventCardProps) {
@@ -178,6 +280,9 @@ export function EventCard({ calEvent, isPast = false }: EventCardProps) {
         `}>
           <ExternalLink className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
         </div>
+
+        {/* RSVP Preview Row */}
+        <RSVPPreview naddr={naddr} />
 
         {/* Active left border accent */}
         {!isPast && (
