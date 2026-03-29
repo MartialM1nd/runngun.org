@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 
 const Index = () => {
   useSeoMeta({
-    title: 'Run & Gun — Two-Gun Biathlon Events',
+    title: 'runngun.org — Two-Gun Biathlon Events',
     description:
       'The official schedule for Run & Gun two-gun biathlon competition events. Race hard, shoot straight.',
   });
@@ -42,7 +42,7 @@ const Index = () => {
 
           {/* Wordmark */}
           <h1 className="font-condensed text-6xl sm:text-8xl font-bold tracking-tight text-foreground uppercase animate-fade-in-up">
-            Run &amp; Gun
+            runngun.org
           </h1>
           <div className="mt-2 mx-auto w-24 h-0.5 bg-gradient-to-r from-transparent via-primary to-transparent" />
 
@@ -51,7 +51,7 @@ const Index = () => {
           </p>
 
           <p className="mt-4 max-w-xl mx-auto text-muted-foreground text-base sm:text-lg leading-relaxed animate-fade-in">
-            Race hard. Shoot straight. Compete in the most demanding multi-discipline shooting
+            Run hard. Shoot straight. Compete in the most demanding multi-discipline shooting
             sport — combining pistol and rifle marksmanship with a timed run course.
           </p>
 
@@ -67,13 +67,14 @@ const Index = () => {
               View Schedule
             </Button>
             <Button
-              variant="outline"
               size="lg"
-              className="font-condensed text-lg font-bold tracking-wide uppercase border-border text-foreground hover:border-primary/60 hover:text-primary px-8"
+              variant="outline"
+              className="font-condensed text-lg font-bold tracking-wide uppercase border-primary/40 text-primary hover:bg-primary/10 hover:border-primary/60 px-8"
               asChild
             >
-              <Link to="/admin">Admin</Link>
+              <a href="/calendar">View Calendar</a>
             </Button>
+            
           </div>
 
           {/* Scroll hint */}
@@ -134,7 +135,7 @@ const Index = () => {
           <div className="flex items-center gap-2">
             <Target className="w-4 h-4 text-primary" />
             <span className="font-condensed font-bold tracking-wide uppercase text-foreground">
-              Run &amp; Gun
+runngun.org
             </span>
             <span className="text-muted-foreground/50">·</span>
             <span>runngun.org</span>

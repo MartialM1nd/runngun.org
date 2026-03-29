@@ -26,7 +26,7 @@ function getAllTags(event: NostrEvent, name: string): string[] {
   return event.tags.filter(([t]) => t === name).map(([, v]) => v).filter(Boolean);
 }
 
-function validateCalendarEvent(event: NostrEvent): boolean {
+export function validateCalendarEvent(event: NostrEvent): boolean {
   if (event.kind !== 31923) return false;
 
   const d = getTag(event, 'd');
@@ -41,7 +41,7 @@ function validateCalendarEvent(event: NostrEvent): boolean {
   return true;
 }
 
-function parseCalendarEvent(event: NostrEvent): CalendarEvent {
+export function parseCalendarEvent(event: NostrEvent): CalendarEvent {
   const d = getTag(event, 'd') ?? '';
   const title = getTag(event, 'title') ?? getTag(event, 'name') ?? 'Untitled Event';
   const summary = getTag(event, 'summary') ?? '';
@@ -83,6 +83,7 @@ export function useCalendarEvents() {
           {
             kinds: [31923],
             authors: ADMIN_PUBKEYS,
+            '#t': ['runngun'],
             limit: 100,
           },
         ],
