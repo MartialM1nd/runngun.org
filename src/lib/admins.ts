@@ -9,7 +9,7 @@
 export const ADMIN_PUBKEYS: string[] = [
   // Site owner pubkey — replace with your own hex pubkey
   // To get your hex pubkey: decode your npub using a NIP-19 decoder
-  '5748528068b958db3f33cf0ebf63096f8c780d719a18decaf4df12ea3421a15f',
+  'ac391a41b2cfb30d77480b5c32322e1989db91db89a253775162871677d1954e',
 ];
 
 /** The primary site owner pubkey (used for admin config queries) */
