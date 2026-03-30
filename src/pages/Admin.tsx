@@ -12,18 +12,19 @@ import {
   MapPin,
   ChevronDown,
   ChevronUp,
+  Plus,
+  X,
 } from 'lucide-react';
 import { nip19 } from 'nostr-tools';
 import { useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 
 import { AdminGuard } from '@/components/AdminGuard';
-import { EventForm } from '@/components/EventForm';
 import { RelayListManager } from '@/components/RelayListManager';
-import { EditProfileForm } from '@/components/EditProfileForm';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -41,7 +42,30 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useCalendarEvents, splitEvents, type CalendarEvent } from '@/hooks/useCalendarEvents';
 import { useNostrPublish } from '@/hooks/useNostrPublish';
 import { useToast } from '@/hooks/useToast';
-import { ADMIN_PUBKEYS } from '@/lib/admins';
+import { ADMIN_PUBKEYS, getAllAdmins, addAdmin, removeAdmin } from '@/lib/admins';
+import { EventForm, type FormState } from '@/components/EventForm';
+
+const TEMPLATES_STORAGE_KEY = 'nostr:event-templates';
+
+interface EventTemplate {
+  id: string;
+  name: string;
+  form: FormState;
+  createdAt: number;
+}
+
+function getTemplates(): EventTemplate[] {
+  try {
+    const stored = localStorage.getItem(TEMPLATES_STORAGE_KEY);
+    return stored ? JSON.parse(stored) : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveTemplates(templates: EventTemplate[]): void {
+  localStorage.setItem(TEMPLATES_STORAGE_KEY, JSON.stringify(templates));
+}
 
 // ─── Event Manager Tab ──────────────────────────────────────────────────────
 
@@ -223,50 +247,119 @@ function EventRow({
 function EventsTab() {
   const queryClient = useQueryClient();
   const { data: events, isLoading } = useCalendarEvents();
+  const { toast } = useToast();
   const [showForm, setShowForm] = useState(false);
   const [editingEvent, setEditingEvent] = useState<CalendarEvent | undefined>(undefined);
   const [showPast, setShowPast] = useState(false);
+  const [templates, setTemplates] = useState<EventTemplate[]>(getTemplates);
+  const [templateToLoad, setTemplateToLoad] = useState<Partial<FormState> | undefined>(undefined);
 
   const { upcoming, past } = events ? splitEvents(events) : { upcoming: [], past: [] };
 
   function handleEdit(ev: CalendarEvent) {
     setEditingEvent(ev);
+    setTemplateToLoad(undefined);
     setShowForm(true);
   }
 
   function handleFormSuccess() {
     setShowForm(false);
     setEditingEvent(undefined);
+    setTemplateToLoad(undefined);
     queryClient.invalidateQueries({ queryKey: ['calendar-events'] });
   }
 
   function handleCancelForm() {
     setShowForm(false);
     setEditingEvent(undefined);
+    setTemplateToLoad(undefined);
   }
 
   function handleDeleted() {
     queryClient.invalidateQueries({ queryKey: ['calendar-events'] });
   }
 
+  function handleSaveTemplate(name: string) {
+    const newTemplate: EventTemplate = {
+      id: crypto.randomUUID(),
+      name,
+      form: templateToLoad as FormState,
+      createdAt: Math.floor(Date.now() / 1000),
+    };
+    const updated = [...templates, newTemplate];
+    setTemplates(updated);
+    saveTemplates(updated);
+    toast({ title: 'Template saved', description: `"${name}" has been saved as a template.` });
+  }
+
+  function handleLoadTemplate(template: EventTemplate) {
+    setTemplateToLoad(template.form);
+    setShowForm(true);
+  }
+
+  function handleDeleteTemplate(id: string) {
+    const updated = templates.filter(t => t.id !== id);
+    setTemplates(updated);
+    saveTemplates(updated);
+    toast({ title: 'Template deleted' });
+  }
+
   return (
     <div className="space-y-6">
+      {/* Templates section - show when not editing */}
+      {!showForm && templates.length > 0 && (
+        <div>
+          <h3 className="font-condensed text-sm font-bold uppercase tracking-widest text-muted-foreground mb-3">
+            Templates
+          </h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            {templates.map((t) => (
+              <div
+                key={t.id}
+                className="flex items-center gap-2 p-3 rounded-md border border-border bg-muted/20"
+              >
+                <span className="flex-1 font-condensed text-sm font-bold truncate">{t.name}</span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleLoadTemplate(t)}
+                  className="font-condensed uppercase text-xs"
+                >
+                  Load
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => handleDeleteTemplate(t.id)}
+                  className="size-7 text-muted-foreground hover:text-destructive"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </Button>
+              </div>
+            ))}
+          </div>
+          <Separator className="mt-6" />
+        </div>
+      )}
+
       {/* Create / Edit form */}
       {showForm ? (
         <div className="rounded-lg border border-primary/30 bg-card p-5">
           <h2 className="font-condensed text-lg font-bold uppercase tracking-wide text-foreground mb-4 flex items-center gap-2">
             <CalendarPlus className="w-4 h-4 text-primary" />
-            {editingEvent ? 'Edit Event' : 'New Event'}
+            {editingEvent ? 'Edit Event' : templateToLoad ? 'New Event (from template)' : 'New Event'}
           </h2>
           <EventForm
             existing={editingEvent}
+            templateToLoad={templateToLoad}
             onSuccess={handleFormSuccess}
             onCancel={handleCancelForm}
+            onSaveTemplate={handleSaveTemplate}
           />
         </div>
       ) : (
         <Button
-          onClick={() => { setEditingEvent(undefined); setShowForm(true); }}
+          onClick={() => { setEditingEvent(undefined); setTemplateToLoad(undefined); setShowForm(true); }}
           className="font-condensed font-bold uppercase tracking-wide bg-primary text-primary-foreground hover:bg-primary/90"
         >
           <CalendarPlus className="w-4 h-4 mr-2" />
@@ -356,53 +449,138 @@ function RelaysTab() {
 // ─── Identity Tab ────────────────────────────────────────────────────────────
 
 function IdentityTab() {
+  const { toast } = useToast();
+  const [newAdminInput, setNewAdminInput] = useState('');
+  const [isAdding, setIsAdding] = useState(false);
+
+  
+  const allAdmins = getAllAdmins();
+  const hardcodedCount = ADMIN_PUBKEYS.length;
+
+  const handleAddAdmin = () => {
+    const input = newAdminInput.trim();
+    if (!input) return;
+
+    let pubkey = input;
+    try {
+      const decoded = nip19.decode(input);
+      if (decoded.type === 'npub') {
+        pubkey = decoded.data;
+      } else if (decoded.type === 'nprofile') {
+        pubkey = decoded.data.pubkey;
+      }
+    } catch {
+      // Assume it's a hex pubkey if decoding fails
+    }
+
+    if (!/^[0-9a-fA-F]{64}$/.test(pubkey)) {
+      toast({
+        title: 'Invalid pubkey',
+        description: 'Please enter a valid npub or hex pubkey',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (allAdmins.some(pk => pk.toLowerCase() === pubkey.toLowerCase())) {
+      toast({
+        title: 'Admin already exists',
+        description: 'This pubkey is already an admin',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    addAdmin(pubkey);
+    setNewAdminInput('');
+    setIsAdding(false);
+    toast({
+      title: 'Admin added',
+      description: 'New admin has been added successfully',
+    });
+  };
+
+  const handleRemoveAdmin = (pubkey: string) => {
+    removeAdmin(pubkey);
+    toast({
+      title: 'Admin removed',
+      description: 'Admin has been removed successfully',
+    });
+  };
+
   return (
     <div className="space-y-6">
-      {/* Profile */}
-      <div>
-        <h2 className="font-condensed text-lg font-bold uppercase tracking-wide text-foreground">
-          Nostr Profile
-        </h2>
-        <p className="text-sm text-muted-foreground mt-1">
-          Edit your public Nostr identity. This is published as a kind 0 metadata event.
-        </p>
-      </div>
-      <Separator />
-      <EditProfileForm />
-
-      {/* Admin pubkeys info */}
-      <Separator />
       <div className="space-y-3">
         <h2 className="font-condensed text-lg font-bold uppercase tracking-wide text-foreground flex items-center gap-2">
           <AlertTriangle className="w-4 h-4 text-primary" />
           Admin Accounts
         </h2>
         <p className="text-sm text-muted-foreground">
-          The following pubkeys have admin access to this site. To add or remove admins, edit{' '}
-          <code className="text-xs bg-muted px-1.5 py-0.5 rounded font-mono">
-            src/lib/admins.ts
-          </code>{' '}
-          in the project source.
+          Manage admin access for this site. Hardcoded admins cannot be removed.
         </p>
+
+        {isAdding ? (
+          <div className="flex gap-2">
+            <Input
+              placeholder="Enter npub or hex pubkey"
+              value={newAdminInput}
+              onChange={(e) => setNewAdminInput(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleAddAdmin()}
+              className="font-mono text-sm"
+            />
+            <Button onClick={handleAddAdmin} size="sm">
+              Add
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => { setIsAdding(false); setNewAdminInput(''); }}
+            >
+              Cancel
+            </Button>
+          </div>
+        ) : (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setIsAdding(true)}
+            className="font-condensed uppercase"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Add Admin
+          </Button>
+        )}
+
         <div className="space-y-2">
-          {ADMIN_PUBKEYS.map((pk, i) => {
+          {allAdmins.map((pk, i) => {
             let npub = pk;
             try {
               npub = nip19.npubEncode(pk);
             } catch {
               // keep as hex if encoding fails
             }
+            const isHardcoded = i < hardcodedCount;
             return (
               <div
                 key={pk}
                 className="flex items-center gap-3 rounded-md border border-border bg-muted/20 px-3 py-2"
               >
                 <Badge variant="outline" className="text-xs shrink-0 font-condensed">
-                  {i === 0 ? 'Owner' : `Admin ${i + 1}`}
+                  {isHardcoded ? (i === 0 ? 'Owner' : 'Hardcoded') : 'Admin'}
                 </Badge>
-                <span className="font-mono text-xs text-muted-foreground truncate">
+                <span className="font-mono text-xs text-muted-foreground truncate flex-1">
                   {npub}
                 </span>
+                {!isHardcoded && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="size-6 text-muted-foreground hover:text-destructive"
+                    onClick={() => handleRemoveAdmin(pk)}
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </Button>
+                )}
               </div>
             );
           })}
@@ -416,7 +594,7 @@ function IdentityTab() {
 
 export default function Admin() {
   useSeoMeta({
-    title: 'Admin — Run & Gun',
+    title: 'Admin — runngun.org',
     description: 'Manage Run & Gun events, relays, and identity.',
   });
 

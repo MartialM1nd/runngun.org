@@ -6,8 +6,6 @@ import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useAppContext } from '@/hooks/useAppContext';
-import { useCurrentUser } from '@/hooks/useCurrentUser';
-import { useNostrPublish } from '@/hooks/useNostrPublish';
 import { useToast } from '@/hooks/useToast';
 
 interface Relay {
@@ -18,14 +16,11 @@ interface Relay {
 
 export function RelayListManager() {
   const { config, updateConfig } = useAppContext();
-  const { user } = useCurrentUser();
-  const { mutate: publishEvent } = useNostrPublish();
   const { toast } = useToast();
 
   const [relays, setRelays] = useState<Relay[]>(config.relayMetadata.relays);
   const [newRelayUrl, setNewRelayUrl] = useState('');
 
-  // Sync local state with config when it changes (e.g., from NostrProvider sync)
   useEffect(() => {
     setRelays(config.relayMetadata.relays);
   }, [config.relayMetadata.relays]);
@@ -109,7 +104,6 @@ export function RelayListManager() {
   const saveRelays = (newRelays: Relay[]) => {
     const now = Math.floor(Date.now() / 1000);
 
-    // Update local config
     updateConfig((current) => ({
       ...current,
       relayMetadata: {
@@ -118,48 +112,10 @@ export function RelayListManager() {
       },
     }));
 
-    // Publish to Nostr if user is logged in
-    if (user) {
-      publishNIP65RelayList(newRelays);
-    }
-  };
-
-  const publishNIP65RelayList = (relayList: Relay[]) => {
-    const tags = relayList.map(relay => {
-      if (relay.read && relay.write) {
-        return ['r', relay.url];
-      } else if (relay.read) {
-        return ['r', relay.url, 'read'];
-      } else if (relay.write) {
-        return ['r', relay.url, 'write'];
-      }
-      // If neither read nor write, don't include (shouldn't happen)
-      return null;
-    }).filter((tag): tag is string[] => tag !== null);
-
-    publishEvent(
-      {
-        kind: 10002,
-        content: '',
-        tags,
-      },
-      {
-        onSuccess: () => {
-          toast({
-            title: 'Relay list published',
-            description: 'Your relay list has been published to Nostr.',
-          });
-        },
-        onError: (error) => {
-          console.error('Failed to publish relay list:', error);
-          toast({
-            title: 'Failed to publish relay list',
-            description: 'There was an error publishing your relay list to Nostr.',
-            variant: 'destructive',
-          });
-        },
-      }
-    );
+    toast({
+      title: 'Relay list updated',
+      description: 'Website relay settings have been saved locally.',
+    });
   };
 
   const renderRelayUrl = (url: string): string => {
@@ -181,7 +137,6 @@ export function RelayListManager() {
 
   return (
     <div className="space-y-4">
-      {/* Relay List */}
       <div className="space-y-2">
         {relays.map((relay) => (
           <div
@@ -193,7 +148,6 @@ export function RelayListManager() {
               {renderRelayUrl(relay.url)}
             </span>
 
-            {/* Settings Popover */}
             <Popover>
               <PopoverTrigger asChild>
                 <Button
@@ -232,7 +186,6 @@ export function RelayListManager() {
               </PopoverContent>
             </Popover>
 
-            {/* Remove Button */}
             <Button
               variant="ghost"
               size="icon"
@@ -246,7 +199,6 @@ export function RelayListManager() {
         ))}
       </div>
 
-      {/* Add Relay Form */}
       <div className="flex gap-2">
         <div className="flex-1">
           <Label htmlFor="new-relay-url" className="sr-only">
@@ -276,11 +228,9 @@ export function RelayListManager() {
         </Button>
       </div>
 
-      {!user && (
-        <p className="text-xs text-muted-foreground">
-          Log in to sync your relay list with Nostr
-        </p>
-      )}
+      <p className="text-xs text-muted-foreground">
+        Website-specific relay settings (stored locally, not synced to Nostr)
+      </p>
     </div>
   );
 }

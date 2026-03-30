@@ -5,28 +5,29 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Loader2, Plus, X } from 'lucide-react';
+import { Loader2, Plus, X, Save } from 'lucide-react';
 import type { CalendarEvent } from '@/hooks/useCalendarEvents';
 
-interface EventFormProps {
-  /** If provided, the form is in "edit" mode and pre-fills with the event's data */
-  existing?: CalendarEvent;
-  onSuccess?: () => void;
-  onCancel?: () => void;
-}
-
-interface FormState {
+export interface FormState {
   title: string;
   summary: string;
   content: string;
   location: string;
   image: string;
-  startDate: string; // YYYY-MM-DD
-  startTime: string; // HH:MM
+  startDate: string;
+  startTime: string;
   endDate: string;
   endTime: string;
   tzid: string;
   links: string[];
+}
+
+interface EventFormProps {
+  existing?: CalendarEvent;
+  templateToLoad?: Partial<FormState>;
+  onSuccess?: () => void;
+  onCancel?: () => void;
+  onSaveTemplate?: (name: string) => void;
 }
 
 function toDateStr(ts: number): string {
@@ -49,7 +50,6 @@ function toTimestamp(dateStr: string, timeStr: string): number {
   return Math.floor(dt.getTime() / 1000);
 }
 
-/** Calculate D tags (day-granularity unix timestamps / 86400) for NIP-52 */
 function calcDTags(start: number, end?: number): string[] {
   const daySeconds = 86400;
   const startDay = Math.floor(start / daySeconds);
@@ -61,7 +61,7 @@ function calcDTags(start: number, end?: number): string[] {
   return Array.from(days).map(String);
 }
 
-export function EventForm({ existing, onSuccess, onCancel }: EventFormProps) {
+export function EventForm({ existing, templateToLoad, onSuccess, onCancel, onSaveTemplate }: EventFormProps) {
   const { mutate: publishEvent, isPending } = useNostrPublish();
   const { toast } = useToast();
 
@@ -81,7 +81,6 @@ export function EventForm({ existing, onSuccess, onCancel }: EventFormProps) {
     links: [''],
   });
 
-  // Pre-fill from existing event
   useEffect(() => {
     if (!existing) return;
     setForm({
@@ -98,6 +97,24 @@ export function EventForm({ existing, onSuccess, onCancel }: EventFormProps) {
       links: existing.links.length > 0 ? existing.links : [''],
     });
   }, [existing]);
+
+  useEffect(() => {
+    if (!templateToLoad) return;
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    setForm({
+      title: templateToLoad.title ?? '',
+      summary: templateToLoad.summary ?? '',
+      content: templateToLoad.content ?? '',
+      location: templateToLoad.location ?? '',
+      image: templateToLoad.image ?? '',
+      startDate: toDateStr(Math.floor(Date.now() / 1000)),
+      startTime: templateToLoad.startTime ?? '08:00',
+      endDate: toDateStr(Math.floor(Date.now() / 1000)),
+      endTime: templateToLoad.endTime ?? '17:00',
+      tzid: templateToLoad.tzid ?? tz,
+      links: templateToLoad.links?.length ? templateToLoad.links : [''],
+    });
+  }, [templateToLoad]);
 
   function setField<K extends keyof FormState>(key: K, value: FormState[K]) {
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -116,6 +133,13 @@ export function EventForm({ existing, onSuccess, onCancel }: EventFormProps) {
   function removeLink(index: number) {
     const updated = form.links.filter((_, i) => i !== index);
     setForm((prev) => ({ ...prev, links: updated.length > 0 ? updated : [''] }));
+  }
+
+  function handleSaveTemplate() {
+    const name = prompt('Enter template name:');
+    if (name?.trim()) {
+      onSaveTemplate?.(name.trim());
+    }
   }
 
   function handleSubmit(e: React.FormEvent) {
@@ -140,18 +164,15 @@ export function EventForm({ existing, onSuccess, onCancel }: EventFormProps) {
       return;
     }
 
-    // For edits, reuse the existing d-tag; for new events generate a UUID
     const dTag = existing?.d ?? crypto.randomUUID();
-
     const validLinks = form.links.filter((l) => l.trim().length > 0);
-
     const dTags = calcDTags(start, end);
 
     const tags: string[][] = [
       ['d', dTag],
       ['title', form.title.trim()],
       ['start', String(start)],
-      ['t', 'run-and-gun'],
+      ['t', 'runngun'],
     ];
 
     if (form.summary.trim()) tags.push(['summary', form.summary.trim()]);
@@ -193,7 +214,6 @@ export function EventForm({ existing, onSuccess, onCancel }: EventFormProps) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
-      {/* Title */}
       <div className="space-y-1.5">
         <Label htmlFor="ev-title" className="font-condensed font-600 uppercase text-xs tracking-wide">
           Title <span className="text-primary">*</span>
@@ -207,7 +227,6 @@ export function EventForm({ existing, onSuccess, onCancel }: EventFormProps) {
         />
       </div>
 
-      {/* Summary */}
       <div className="space-y-1.5">
         <Label htmlFor="ev-summary" className="font-condensed font-600 uppercase text-xs tracking-wide">
           Short Summary
@@ -220,7 +239,6 @@ export function EventForm({ existing, onSuccess, onCancel }: EventFormProps) {
         />
       </div>
 
-      {/* Start date/time */}
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1.5">
           <Label htmlFor="ev-start-date" className="font-condensed font-600 uppercase text-xs tracking-wide">
@@ -248,7 +266,6 @@ export function EventForm({ existing, onSuccess, onCancel }: EventFormProps) {
         </div>
       </div>
 
-      {/* End date/time */}
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1.5">
           <Label htmlFor="ev-end-date" className="font-condensed font-600 uppercase text-xs tracking-wide">
@@ -274,7 +291,6 @@ export function EventForm({ existing, onSuccess, onCancel }: EventFormProps) {
         </div>
       </div>
 
-      {/* Timezone */}
       <div className="space-y-1.5">
         <Label htmlFor="ev-tzid" className="font-condensed font-600 uppercase text-xs tracking-wide">
           Timezone
@@ -288,7 +304,6 @@ export function EventForm({ existing, onSuccess, onCancel }: EventFormProps) {
         <p className="text-xs text-muted-foreground">IANA timezone name (e.g., America/New_York)</p>
       </div>
 
-      {/* Location */}
       <div className="space-y-1.5">
         <Label htmlFor="ev-location" className="font-condensed font-600 uppercase text-xs tracking-wide">
           Location
@@ -301,7 +316,6 @@ export function EventForm({ existing, onSuccess, onCancel }: EventFormProps) {
         />
       </div>
 
-      {/* Image URL */}
       <div className="space-y-1.5">
         <Label htmlFor="ev-image" className="font-condensed font-600 uppercase text-xs tracking-wide">
           Banner Image URL
@@ -315,7 +329,6 @@ export function EventForm({ existing, onSuccess, onCancel }: EventFormProps) {
         />
       </div>
 
-      {/* Full description */}
       <div className="space-y-1.5">
         <Label htmlFor="ev-content" className="font-condensed font-600 uppercase text-xs tracking-wide">
           Full Description
@@ -329,7 +342,6 @@ export function EventForm({ existing, onSuccess, onCancel }: EventFormProps) {
         />
       </div>
 
-      {/* Links */}
       <div className="space-y-2">
         <Label className="font-condensed font-600 uppercase text-xs tracking-wide">
           Links (registration, info, etc.)
@@ -367,8 +379,7 @@ export function EventForm({ existing, onSuccess, onCancel }: EventFormProps) {
         </Button>
       </div>
 
-      {/* Actions */}
-      <div className="flex gap-3 pt-2">
+      <div className="flex flex-wrap gap-3 pt-2">
         <Button
           type="submit"
           disabled={isPending}
@@ -385,6 +396,17 @@ export function EventForm({ existing, onSuccess, onCancel }: EventFormProps) {
             className="font-condensed font-bold uppercase tracking-wide"
           >
             Cancel
+          </Button>
+        )}
+        {onSaveTemplate && (
+          <Button
+            type="button"
+            variant="outline"
+            onClick={handleSaveTemplate}
+            className="font-condensed font-bold uppercase tracking-wide"
+          >
+            <Save className="w-4 h-4 mr-2" />
+            Save as Template
           </Button>
         )}
       </div>
