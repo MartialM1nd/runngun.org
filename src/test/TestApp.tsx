@@ -29,6 +29,9 @@ export function TestApp({ children }: TestAppProps) {
       ],
       updatedAt: 0,
     },
+    blossomServers: [
+      'https://blossom.primal.net/',
+    ],
   };
 
   return (

@@ -14,6 +14,7 @@ import {
   ChevronUp,
   Plus,
   X,
+  Server,
 } from 'lucide-react';
 import { nip19 } from 'nostr-tools';
 import { useQueryClient } from '@tanstack/react-query';
@@ -21,6 +22,7 @@ import { Link } from 'react-router-dom';
 
 import { AdminGuard } from '@/components/AdminGuard';
 import { RelayListManager } from '@/components/RelayListManager';
+import { BlossomServerManager } from '@/components/BlossomServerManager';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -590,6 +592,26 @@ function IdentityTab() {
   );
 }
 
+// ─── Blossom Tab ─────────────────────────────────────────────────────────────
+
+function BlossomTab() {
+  return (
+    <div className="space-y-4">
+      <div>
+        <h2 className="font-condensed text-lg font-bold uppercase tracking-wide text-foreground">
+          Blossom Server Configuration
+        </h2>
+        <p className="text-sm text-muted-foreground mt-1">
+          Manage Blossom servers used for uploading images and files. These servers are used
+          when uploading media to events and profiles.
+        </p>
+      </div>
+      <Separator />
+      <BlossomServerManager />
+    </div>
+  );
+}
+
 // ─── Admin Page ──────────────────────────────────────────────────────────────
 
 export default function Admin() {
@@ -606,12 +628,12 @@ export default function Admin() {
             Event Admin
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Manage events, relays, and your Nostr identity for runngun.org.
+            Manage events, relays, Blossom servers, and your Nostr identity for runngun.org.
           </p>
         </div>
 
         <Tabs defaultValue="events" className="w-full">
-          <TabsList className="w-full mb-6 h-auto p-1 bg-muted/30 border border-border rounded-lg grid grid-cols-3">
+          <TabsList className="w-full mb-6 h-auto p-1 bg-muted/30 border border-border rounded-lg grid grid-cols-4">
             <TabsTrigger
               value="events"
               className="font-condensed font-bold uppercase tracking-wide text-sm data-[state=active]:bg-primary data-[state=active]:text-primary-foreground py-2.5"
@@ -633,6 +655,13 @@ export default function Admin() {
               <User className="w-4 h-4 mr-1.5" />
               Identity
             </TabsTrigger>
+            <TabsTrigger
+              value="blossom"
+              className="font-condensed font-bold uppercase tracking-wide text-sm data-[state=active]:bg-primary data-[state=active]:text-primary-foreground py-2.5"
+            >
+              <Server className="w-4 h-4 mr-1.5" />
+              Blossom
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="events" className="mt-0">
@@ -645,6 +674,10 @@ export default function Admin() {
 
           <TabsContent value="identity" className="mt-0">
             <IdentityTab />
+          </TabsContent>
+
+          <TabsContent value="blossom" className="mt-0">
+            <BlossomTab />
           </TabsContent>
         </Tabs>
       </div>

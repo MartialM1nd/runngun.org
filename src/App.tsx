@@ -41,6 +41,10 @@ const defaultConfig: AppConfig = {
     ],
     updatedAt: 0,
   },
+  blossomServers: [
+    'https://blossom.ditto.pub/',
+    'https://blossom.primal.net/',
+  ],
 };
 
 export function App() {

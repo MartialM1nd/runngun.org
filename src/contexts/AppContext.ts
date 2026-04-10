@@ -14,6 +14,8 @@ export interface AppConfig {
   theme: Theme;
   /** NIP-65 relay list metadata */
   relayMetadata: RelayMetadata;
+  /** List of Blossom servers for file uploads */
+  blossomServers: string[];
 }
 
 export interface AppContextType {
