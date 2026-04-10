@@ -24,6 +24,7 @@ import { AdminGuard } from '@/components/AdminGuard';
 import { RelayListManager } from '@/components/RelayListManager';
 import { BlossomServerManager } from '@/components/BlossomServerManager';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -44,8 +45,10 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useCalendarEvents, splitEvents, type CalendarEvent } from '@/hooks/useCalendarEvents';
 import { useNostrPublish } from '@/hooks/useNostrPublish';
 import { useToast } from '@/hooks/useToast';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { ADMIN_PUBKEYS, getAllAdmins, addAdmin, removeAdmin } from '@/lib/admins';
 import { EventForm, type FormState } from '@/components/EventForm';
+import { genUserName } from '@/lib/genUserName';
 
 const TEMPLATES_STORAGE_KEY = 'nostr:event-templates';
 
@@ -455,7 +458,7 @@ function IdentityTab() {
   const [newAdminInput, setNewAdminInput] = useState('');
   const [isAdding, setIsAdding] = useState(false);
 
-  
+  const { user, users } = useCurrentUser();
   const allAdmins = getAllAdmins();
   const hardcodedCount = ADMIN_PUBKEYS.length;
 
@@ -512,6 +515,68 @@ function IdentityTab() {
 
   return (
     <div className="space-y-6">
+      {user ? (
+        <div className="space-y-3">
+          <h2 className="font-condensed text-lg font-bold uppercase tracking-wide text-foreground flex items-center gap-2">
+            <User className="w-4 h-4 text-primary" />
+            Your Identity
+          </h2>
+          <p className="text-sm text-muted-foreground">
+            You are currently logged in with {users.length > 1 ? `${users.length} accounts` : '1 account'}.
+          </p>
+          <div className="space-y-2">
+            {users.map((u, i) => {
+              const npub = nip19.npubEncode(u.pubkey);
+              const displayName = u.metadata?.name ?? u.metadata?.display_name ?? genUserName(u.pubkey);
+              const picture = u.metadata?.picture;
+              const isCurrent = i === 0;
+
+              return (
+                <div
+                  key={u.pubkey}
+                  className="flex items-center gap-3 p-3 rounded-md border bg-card"
+                >
+                  <Avatar className="h-10 w-10 border">
+                    {picture && <AvatarImage src={picture} alt={displayName} />}
+                    <AvatarFallback className="text-xs font-mono bg-muted">
+                      {displayName.slice(0, 2).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="font-condensed font-bold text-foreground truncate">
+                        {displayName}
+                      </span>
+                      {isCurrent && (
+                        <Badge variant="secondary" className="text-xs font-condensed shrink-0">
+                          Active
+                        </Badge>
+                      )}
+                    </div>
+                    {u.metadata?.nip05 && (
+                      <span className="text-xs text-muted-foreground">
+                        {u.metadata.nip05}
+                      </span>
+                    )}
+                    <span className="font-mono text-xs text-muted-foreground truncate block" title={npub}>
+                      {npub.slice(0, 20)}...{npub.slice(-8)}
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      ) : (
+        <div className="p-4 rounded-md border border-dashed bg-muted/10">
+          <p className="text-sm text-muted-foreground text-center">
+            No account logged in. Log in to access admin features.
+          </p>
+        </div>
+      )}
+
+      <Separator />
+
       <div className="space-y-3">
         <h2 className="font-condensed text-lg font-bold uppercase tracking-wide text-foreground flex items-center gap-2">
           <AlertTriangle className="w-4 h-4 text-primary" />
