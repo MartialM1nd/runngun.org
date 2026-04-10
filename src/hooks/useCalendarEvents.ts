@@ -1,7 +1,7 @@
 import { useNostr } from '@nostrify/react';
 import { useQuery } from '@tanstack/react-query';
 import type { NostrEvent } from '@nostrify/nostrify';
-import { ADMIN_PUBKEYS } from '@/lib/admins';
+import { getAllAdmins } from '@/lib/admins';
 
 export interface CalendarEvent {
   event: NostrEvent;
@@ -73,16 +73,17 @@ export function parseCalendarEvent(event: NostrEvent): CalendarEvent {
 
 export function useCalendarEvents() {
   const { nostr } = useNostr();
+  const allAdmins = getAllAdmins();
 
   return useQuery({
-    queryKey: ['calendar-events', 'kind:31923', ADMIN_PUBKEYS],
+    queryKey: ['calendar-events', 'kind:31923', allAdmins],
     queryFn: async (c) => {
       const signal = c.signal as AbortSignal;
       const events = await nostr.query(
         [
           {
             kinds: [31923],
-            authors: ADMIN_PUBKEYS,
+            authors: getAllAdmins(),
             '#t': ['runngun'],
             limit: 100,
           },
