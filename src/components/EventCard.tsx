@@ -160,7 +160,7 @@ export function EventCard({ calEvent, isPast = false }: EventCardProps) {
 
         {/* Right: Event image (if present) */}
         {image && (
-          <div className="hidden sm:block w-24 shrink-0 overflow-hidden">
+          <div className="hidden sm:block w-32 shrink-0 overflow-hidden">
             <img
               src={image}
               alt={title}
