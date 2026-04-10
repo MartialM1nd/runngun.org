@@ -16,12 +16,12 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ADMIN_PUBKEYS } from '@/lib/admins';
 import { RSVPButton } from '@/components/RSVPButton';
 import { RSVPList } from '@/components/RSVPList';
 import { CommentForm } from '@/components/CommentForm';
 import { CommentSection } from '@/components/CommentSection';
 import { useEventRSVPs } from '@/hooks/useEventRSVPs';
+import { getAllAdmins } from '@/lib/admins';
 import type { NostrEvent } from '@nostrify/nostrify';
 import NotFound from './NotFound';
 
@@ -307,7 +307,7 @@ function CalendarEventLoader({ kind, pubkey, identifier }: { kind: number; pubke
       const signal = c.signal as AbortSignal;
 
       // CRITICAL: Always filter by both author AND d-tag for addressable events
-      if (!ADMIN_PUBKEYS.includes(pubkey)) {
+      if (!getAllAdmins().includes(pubkey)) {
         return null; // Reject events from non-admin pubkeys
       }
 
