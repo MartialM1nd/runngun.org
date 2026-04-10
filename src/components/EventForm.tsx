@@ -1,11 +1,13 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNostrPublish } from '@/hooks/useNostrPublish';
+import { useUploadFile } from '@/hooks/useUploadFile';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useToast } from '@/hooks/useToast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Loader2, Plus, X, Save } from 'lucide-react';
+import { Loader2, Plus, X, Save, Upload, Image as ImageIcon } from 'lucide-react';
 import type { CalendarEvent } from '@/hooks/useCalendarEvents';
 
 export interface FormState {
@@ -63,7 +65,10 @@ function calcDTags(start: number, end?: number): string[] {
 
 export function EventForm({ existing, templateToLoad, onSuccess, onCancel, onSaveTemplate }: EventFormProps) {
   const { mutate: publishEvent, isPending } = useNostrPublish();
+  const { mutateAsync: uploadFile, isPending: isUploading } = useUploadFile();
+  const { user } = useCurrentUser();
   const { toast } = useToast();
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const browserTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
@@ -133,6 +138,52 @@ export function EventForm({ existing, templateToLoad, onSuccess, onCancel, onSav
   function removeLink(index: number) {
     const updated = form.links.filter((_, i) => i !== index);
     setForm((prev) => ({ ...prev, links: updated.length > 0 ? updated : [''] }));
+  }
+
+  async function handleImageUpload(file: File) {
+    if (!user) {
+      toast({
+        title: 'Login required',
+        description: 'You must be logged in to upload images.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (!file.type.startsWith('image/')) {
+      toast({
+        title: 'Invalid file',
+        description: 'Please select an image file.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    const maxSize = 10 * 1024 * 1024;
+    if (file.size > maxSize) {
+      toast({
+        title: 'File too large',
+        description: 'Image must be under 10MB.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    try {
+      const tags = await uploadFile(file);
+      const urlTag = tags.find((t: string[]) => t[0] === 'url');
+      if (urlTag && urlTag[1]) {
+        setField('image', urlTag[1]);
+        toast({ title: 'Image uploaded', description: 'Image has been uploaded successfully.' });
+      }
+    } catch (err) {
+      console.error('Upload failed:', err);
+      toast({
+        title: 'Upload failed',
+        description: 'There was an error uploading the image.',
+        variant: 'destructive',
+      });
+    }
   }
 
   function handleSaveTemplate() {
@@ -316,17 +367,71 @@ export function EventForm({ existing, templateToLoad, onSuccess, onCancel, onSav
         />
       </div>
 
-      <div className="space-y-1.5">
-        <Label htmlFor="ev-image" className="font-condensed font-600 uppercase text-xs tracking-wide">
-          Banner Image URL
+      <div className="space-y-2">
+        <Label className="font-condensed font-600 uppercase text-xs tracking-wide">
+          Banner Image
         </Label>
-        <Input
-          id="ev-image"
-          type="url"
-          placeholder="https://..."
-          value={form.image}
-          onChange={(e) => setField('image', e.target.value)}
-        />
+        <div className="flex gap-2">
+          <div className="flex-1">
+            <Input
+              id="ev-image"
+              type="url"
+              placeholder="Or enter image URL..."
+              value={form.image}
+              onChange={(e) => setField('image', e.target.value)}
+            />
+          </div>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) handleImageUpload(file);
+              e.target.value = '';
+            }}
+          />
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={isUploading || !user}
+            className="shrink-0"
+          >
+            {isUploading ? (
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            ) : (
+              <Upload className="w-4 h-4 mr-2" />
+            )}
+            Upload
+          </Button>
+        </div>
+        {form.image && (
+          <div className="relative mt-2 rounded-md overflow-hidden border bg-muted/30">
+            <img
+              src={form.image}
+              alt="Banner preview"
+              className="w-full h-32 object-cover"
+              onError={(e) => {
+                (e.target as HTMLImageElement).style.display = 'none';
+              }}
+            />
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="absolute top-1 right-1 h-6 w-6 bg-background/80 hover:bg-background text-muted-foreground hover:text-destructive"
+              onClick={() => setField('image', '')}
+            >
+              <X className="h-3 w-3" />
+            </Button>
+          </div>
+        )}
+        {!user && (
+          <p className="text-xs text-muted-foreground">Log in to upload images</p>
+        )}
       </div>
 
       <div className="space-y-1.5">
