@@ -2,7 +2,7 @@ import { useNostr } from '@nostrify/react';
 import { useQuery } from '@tanstack/react-query';
 import { useMemo } from 'react';
 import { CalendarEvent, validateCalendarEvent, parseCalendarEvent } from './useCalendarEvents';
-import { ADMIN_PUBKEYS } from '@/lib/admins';
+import { getAllAdmins } from '@/lib/admins';
 
 function getMonthRange(year: number, month: number) {
   const start = new Date(year, month, 1, 0, 0, 0, 0);
@@ -43,24 +43,25 @@ interface UseMonthEventsResult {
 
 export function useMonthEvents(year: number, month: number): UseMonthEventsResult {
   const { nostr } = useNostr();
+  const admins = getAllAdmins();
 
   const { since, until } = useMemo(() => getMonthRange(year, month), [year, month]);
 
   const query = useQuery({
-    queryKey: ['month-events', year, month, ADMIN_PUBKEYS],
+    queryKey: ['month-events', year, month, admins],
     queryFn: async ({ signal }) => {
-      const startOfYear = new Date(year, 0, 1).getTime() / 1000;
-      const endOfYear = new Date(year + 1, 0, 0, 23, 59, 59).getTime() / 1000;
+      const startOfRange = new Date(year - 1, 0, 1).getTime() / 1000;
+      const endOfRange = new Date(year + 2, 0, 0, 23, 59, 59).getTime() / 1000;
 
       const events = await nostr.query(
         [
           {
             kinds: [31923],
-            authors: ADMIN_PUBKEYS,
+            authors: getAllAdmins(),
             '#t': ['runngun'],
-            since: startOfYear,
-            until: endOfYear,
-            limit: 200,
+            since: startOfRange,
+            until: endOfRange,
+            limit: 500,
           },
         ],
         { signal },
@@ -75,7 +76,7 @@ export function useMonthEvents(year: number, month: number): UseMonthEventsResul
         })
         .sort((a, b) => a.start - b.start);
     },
-    staleTime: 60_000,
+    staleTime: 30_000,
   });
 
   return {
