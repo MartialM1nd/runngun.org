@@ -46,6 +46,7 @@ import { useCalendarEvents, splitEvents, type CalendarEvent } from '@/hooks/useC
 import { useNostrPublish } from '@/hooks/useNostrPublish';
 import { useToast } from '@/hooks/useToast';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
+import { useAuthors } from '@/hooks/useAuthors';
 import { ADMIN_PUBKEYS, getAllAdmins, addAdmin, removeAdmin } from '@/lib/admins';
 import { EventForm, type FormState } from '@/components/EventForm';
 import { genUserName } from '@/lib/genUserName';
@@ -461,6 +462,7 @@ function IdentityTab() {
   const { user, users } = useCurrentUser();
   const allAdmins = getAllAdmins();
   const hardcodedCount = ADMIN_PUBKEYS.length;
+  const { data: adminProfiles } = useAuthors(allAdmins);
 
   const handleAddAdmin = () => {
     const input = newAdminInput.trim();
@@ -627,22 +629,45 @@ function IdentityTab() {
               // keep as hex if encoding fails
             }
             const isHardcoded = i < hardcodedCount;
+            const profile = adminProfiles?.[pk];
+            const displayName = profile?.metadata?.name ?? profile?.metadata?.display_name ?? genUserName(pk);
+            const picture = profile?.metadata?.picture;
+            const nip05 = profile?.metadata?.nip05;
+
             return (
               <div
                 key={pk}
-                className="flex items-center gap-3 rounded-md border border-border bg-muted/20 px-3 py-2"
+                className="flex items-center gap-3 p-3 rounded-md border border-border bg-muted/20"
               >
-                <Badge variant="outline" className="text-xs shrink-0 font-condensed">
-                  {isHardcoded ? (i === 0 ? 'Owner' : 'Hardcoded') : 'Admin'}
-                </Badge>
-                <span className="font-mono text-xs text-muted-foreground truncate flex-1">
-                  {npub}
-                </span>
+                <Avatar className="h-10 w-10 border shrink-0">
+                  {picture && <AvatarImage src={picture} alt={displayName} />}
+                  <AvatarFallback className="text-xs font-mono bg-muted">
+                    {displayName.slice(0, 2).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="font-condensed font-bold text-foreground truncate">
+                      {displayName}
+                    </span>
+                    <Badge variant="outline" className="text-xs shrink-0 font-condensed">
+                      {isHardcoded ? (i === 0 ? 'Owner' : 'Hardcoded') : 'Admin'}
+                    </Badge>
+                  </div>
+                  {nip05 && (
+                    <span className="text-xs text-muted-foreground">
+                      {nip05}
+                    </span>
+                  )}
+                  <span className="font-mono text-xs text-muted-foreground truncate block" title={npub}>
+                    {npub.slice(0, 20)}...{npub.slice(-8)}
+                  </span>
+                </div>
                 {!isHardcoded && (
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="size-6 text-muted-foreground hover:text-destructive"
+                    className="size-6 text-muted-foreground hover:text-destructive shrink-0"
                     onClick={() => handleRemoveAdmin(pk)}
                   >
                     <X className="h-3.5 w-3.5" />
