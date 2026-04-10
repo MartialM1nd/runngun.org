@@ -459,7 +459,7 @@ function IdentityTab() {
   const [newAdminInput, setNewAdminInput] = useState('');
   const [isAdding, setIsAdding] = useState(false);
 
-  const { user, users } = useCurrentUser();
+  const { user, users, metadata: currentUserMetadata } = useCurrentUser();
   const allAdmins = getAllAdmins();
   const hardcodedCount = ADMIN_PUBKEYS.length;
   const { data: adminProfiles } = useAuthors(allAdmins);
@@ -529,8 +529,10 @@ function IdentityTab() {
           <div className="space-y-2">
             {users.map((u, i) => {
               const npub = nip19.npubEncode(u.pubkey);
-              const displayName = u.metadata?.name ?? u.metadata?.display_name ?? genUserName(u.pubkey);
-              const picture = u.metadata?.picture;
+              const profile = i === 0 ? currentUserMetadata : adminProfiles?.[u.pubkey];
+              const displayName = profile?.name ?? profile?.display_name ?? genUserName(u.pubkey);
+              const picture = profile?.picture;
+              const nip05 = profile?.nip05;
               const isCurrent = i === 0;
 
               return (
@@ -555,9 +557,9 @@ function IdentityTab() {
                         </Badge>
                       )}
                     </div>
-                    {u.metadata?.nip05 && (
+                    {nip05 && (
                       <span className="text-xs text-muted-foreground">
-                        {u.metadata.nip05}
+                        {nip05}
                       </span>
                     )}
                     <span className="font-mono text-xs text-muted-foreground truncate block" title={npub}>
