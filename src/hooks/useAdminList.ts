@@ -16,11 +16,16 @@ function getLegacyStoredAdmins(): string[] {
   }
 }
 
+function getInitialData(): string[] {
+  const legacyAdmins = getLegacyStoredAdmins();
+  return [...new Set([...DEFAULT_ADMIN_PUBKEYS, ...legacyAdmins])];
+}
+
 export function useAdminList() {
   const { nostr } = useNostr();
   const [persistedAdmins, setPersistedAdmins] = useLocalStorage<string[]>(
     STORAGE_KEY,
-    DEFAULT_ADMIN_PUBKEYS,
+    getInitialData(),
   );
 
   const query = useQuery({
@@ -58,9 +63,7 @@ export function useAdminList() {
     },
     staleTime: 15_000,
     retry: 2,
-    initialData: persistedAdmins && persistedAdmins.length > 0 
-      ? persistedAdmins 
-      : [...new Set([...DEFAULT_ADMIN_PUBKEYS, ...getLegacyStoredAdmins()])],
+    initialData: getInitialData(),
   });
 
   return query;

@@ -19,9 +19,13 @@ export function AdminGuard({ children }: AdminGuardProps) {
   const { user } = useCurrentUser();
   const { data: adminList, isLoading } = useAdminList();
 
-  // Use DEFAULT_ADMIN_PUBKEYS if adminList is undefined/null
-  const effectiveAdminList = adminList ?? DEFAULT_ADMIN_PUBKEYS;
-  const isUserAdmin = user ? effectiveAdminList.includes(user.pubkey) : false;
+  const effectiveAdminList = adminList && adminList.length > 0 
+    ? adminList 
+    : DEFAULT_ADMIN_PUBKEYS;
+  
+  const isUserAdmin = user 
+    ? effectiveAdminList.some(pk => pk.toLowerCase() === user.pubkey.toLowerCase())
+    : false;
 
   // Loading admin list
   if (isLoading && !adminList) {
