@@ -46,6 +46,7 @@ import { useCalendarEvents, splitEvents, type CalendarEvent } from '@/hooks/useC
 import { useNostrPublish } from '@/hooks/useNostrPublish';
 import { useToast } from '@/hooks/useToast';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
+import { useAuthor } from '@/hooks/useAuthor';
 import { useAuthors } from '@/hooks/useAuthors';
 import { useAdminList } from '@/hooks/useAdminList';
 import { useAdminMutations } from '@/hooks/useAdminMutations';
@@ -98,16 +99,23 @@ function EventRow({
   calEvent,
   onEdit,
   onDeleted,
+  currentUserPubkey,
 }: {
   calEvent: CalendarEvent;
   onEdit: (ev: CalendarEvent) => void;
   onDeleted: () => void;
+  currentUserPubkey?: string;
 }) {
   const { mutate: publishEvent, isPending: isDeleting } = useNostrPublish();
   const { toast } = useToast();
   const now = Math.floor(Date.now() / 1000);
   const effectiveEnd = calEvent.end ?? calEvent.start;
   const isPast = effectiveEnd < now;
+  const { data: author } = useAuthor(calEvent.event.pubkey);
+  const metadata = author?.metadata;
+  const authorName = metadata?.name ?? metadata?.display_name ?? genUserName(calEvent.event.pubkey);
+  const authorPicture = metadata?.picture;
+  const isOwner = currentUserPubkey?.toLowerCase() === calEvent.event.pubkey.toLowerCase();
 
   const naddr = nip19.naddrEncode({
     kind: 31923,
@@ -187,19 +195,33 @@ function EventRow({
             </span>
           )}
         </div>
+        {/* Author info */}
+        <div className="mt-2 flex items-center gap-2">
+          <Avatar className="h-5 w-5">
+            {authorPicture && <AvatarImage src={authorPicture} alt={authorName} />}
+            <AvatarFallback className="text-[10px] bg-muted">
+              {authorName.slice(0, 2).toUpperCase()}
+            </AvatarFallback>
+          </Avatar>
+          <span className="text-xs text-muted-foreground">
+            Posted by {authorName}
+          </span>
+        </div>
       </div>
 
       {/* Actions */}
       <div className="flex items-center gap-1 shrink-0">
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-8 w-8 text-muted-foreground hover:text-primary"
-          onClick={() => onEdit(calEvent)}
-          title="Edit event"
-        >
-          <Pencil className="w-3.5 h-3.5" />
-        </Button>
+        {isOwner && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 text-muted-foreground hover:text-primary"
+            onClick={() => onEdit(calEvent)}
+            title="Edit event"
+          >
+            <Pencil className="w-3.5 h-3.5" />
+          </Button>
+        )}
 
         <Button
           variant="ghost"
@@ -256,6 +278,7 @@ function EventsTab() {
   const queryClient = useQueryClient();
   const { data: events, isLoading } = useCalendarEvents();
   const { toast } = useToast();
+  const { user } = useCurrentUser();
   const [showForm, setShowForm] = useState(false);
   const [editingEvent, setEditingEvent] = useState<CalendarEvent | undefined>(undefined);
   const [showPast, setShowPast] = useState(false);
@@ -400,6 +423,7 @@ function EventsTab() {
                 calEvent={ev}
                 onEdit={handleEdit}
                 onDeleted={handleDeleted}
+                currentUserPubkey={user?.pubkey}
               />
             ))}
           </div>
@@ -424,6 +448,7 @@ function EventsTab() {
                   calEvent={ev}
                   onEdit={handleEdit}
                   onDeleted={handleDeleted}
+                  currentUserPubkey={user?.pubkey}
                 />
               ))}
             </div>
