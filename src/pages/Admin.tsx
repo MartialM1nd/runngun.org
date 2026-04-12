@@ -49,32 +49,11 @@ import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useAuthor } from '@/hooks/useAuthor';
 import { useAuthors } from '@/hooks/useAuthors';
 import { useAdminList } from '@/hooks/useAdminList';
-import { useAdminMutations } from '@/hooks/useAdminMutations';
+import { useTemplateList, type EventTemplate } from '@/hooks/useTemplateList';
+import { useTemplateMutations } from '@/hooks/useTemplateMutations';
 import { SITE_OWNER_PUBKEY, DEFAULT_ADMIN_PUBKEYS } from '@/lib/config';
 import { EventForm, type FormState } from '@/components/EventForm';
 import { genUserName } from '@/lib/genUserName';
-
-const TEMPLATES_STORAGE_KEY = 'nostr:event-templates';
-
-interface EventTemplate {
-  id: string;
-  name: string;
-  form: FormState;
-  createdAt: number;
-}
-
-function getTemplates(): EventTemplate[] {
-  try {
-    const stored = localStorage.getItem(TEMPLATES_STORAGE_KEY);
-    return stored ? JSON.parse(stored) : [];
-  } catch {
-    return [];
-  }
-}
-
-function saveTemplates(templates: EventTemplate[]): void {
-  localStorage.setItem(TEMPLATES_STORAGE_KEY, JSON.stringify(templates));
-}
 
 // ─── Event Manager Tab ──────────────────────────────────────────────────────
 
@@ -282,8 +261,11 @@ function EventsTab() {
   const [showForm, setShowForm] = useState(false);
   const [editingEvent, setEditingEvent] = useState<CalendarEvent | undefined>(undefined);
   const [showPast, setShowPast] = useState(false);
-  const [templates, setTemplates] = useState<EventTemplate[]>(getTemplates);
   const [templateToLoad, setTemplateToLoad] = useState<FormState | undefined>(undefined);
+
+  const { data: adminList = DEFAULT_ADMIN_PUBKEYS } = useAdminList();
+  const { data: templates = [], isLoading: templatesLoading } = useTemplateList(adminList);
+  const { saveTemplate, deleteTemplate, isAdmin } = useTemplateMutations(adminList);
 
   const { upcoming, past } = events ? splitEvents(events) : { upcoming: [], past: [] };
 
@@ -318,31 +300,42 @@ function EventsTab() {
     const newTemplate: EventTemplate = {
       id: crypto.randomUUID(),
       name,
-      form: templateToLoad as FormState,
-      createdAt: Math.floor(Date.now() / 1000),
+      title: templateToLoad?.title ?? '',
+      summary: templateToLoad?.summary ?? '',
+      content: templateToLoad?.content ?? '',
+      location: templateToLoad?.location ?? '',
+      image: templateToLoad?.image ?? '',
+      links: templateToLoad?.links ?? [],
     };
-    const updated = [...templates, newTemplate];
-    setTemplates(updated);
-    saveTemplates(updated);
-    toast({ title: 'Template saved', description: `"${name}" has been saved as a template.` });
+    saveTemplate(newTemplate);
   }
 
   function handleLoadTemplate(template: EventTemplate) {
-    setTemplateToLoad(template.form);
+    const formState: FormState = {
+      title: template.title,
+      summary: template.summary,
+      content: template.content,
+      location: template.location,
+      image: template.image,
+      startDate: '',
+      startTime: '08:00',
+      endDate: '',
+      endTime: '17:00',
+      tzid: Intl.DateTimeFormat().resolvedOptions().timeZone,
+      links: template.links?.length ? template.links : [''],
+    };
+    setTemplateToLoad(formState);
     setShowForm(true);
   }
 
   function handleDeleteTemplate(id: string) {
-    const updated = templates.filter(t => t.id !== id);
-    setTemplates(updated);
-    saveTemplates(updated);
-    toast({ title: 'Template deleted' });
+    deleteTemplate(id);
   }
 
   return (
     <div className="space-y-6">
       {/* Templates section - show when not editing */}
-      {!showForm && templates.length > 0 && (
+      {!showForm && !templatesLoading && templates.length > 0 && (
         <div>
           <h3 className="font-condensed text-sm font-bold uppercase tracking-widest text-muted-foreground mb-3">
             Templates
