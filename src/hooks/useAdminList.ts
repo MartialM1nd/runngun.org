@@ -5,6 +5,16 @@ import { SITE_OWNER_PUBKEY, ADMIN_LIST_DTAG, DEFAULT_ADMIN_PUBKEYS } from '@/lib
 import { useLocalStorage } from '@/hooks/useLocalStorage';
 
 const STORAGE_KEY = 'runngun:admin-list';
+const LEGACY_STORAGE_KEY = 'nostr:admins';
+
+function getLegacyStoredAdmins(): string[] {
+  try {
+    const stored = localStorage.getItem(LEGACY_STORAGE_KEY);
+    return stored ? JSON.parse(stored) : [];
+  } catch {
+    return [];
+  }
+}
 
 export function useAdminList() {
   const { nostr } = useNostr();
@@ -16,6 +26,8 @@ export function useAdminList() {
   const query = useQuery({
     queryKey: ['admin-list', SITE_OWNER_PUBKEY],
     queryFn: async ({ signal }) => {
+      const legacyAdmins = getLegacyStoredAdmins();
+      
       const events = await nostr.query(
         [
           {
@@ -28,28 +40,27 @@ export function useAdminList() {
         { signal }
       );
 
-      if (events.length === 0) {
-        setPersistedAdmins(DEFAULT_ADMIN_PUBKEYS);
-        return DEFAULT_ADMIN_PUBKEYS;
+      let nostrPubkeys: string[] = [];
+
+      if (events.length > 0) {
+        const content = events[0].content;
+        const parsed = JSON.parse(content);
+        if (Array.isArray(parsed)) {
+          nostrPubkeys = parsed.filter(
+            (pk): pk is string => typeof pk === 'string' && /^[0-9a-fA-F]{64}$/.test(pk)
+          );
+        }
       }
 
-      const content = events[0].content;
-      const pubkeys = JSON.parse(content);
-
-      if (Array.isArray(pubkeys)) {
-        const validPubkeys = pubkeys.filter(
-          (pk): pk is string => typeof pk === 'string' && /^[0-9a-fA-F]{64}$/.test(pk)
-        );
-        setPersistedAdmins(validPubkeys);
-        return validPubkeys;
-      }
-
-      return DEFAULT_ADMIN_PUBKEYS;
+      const allAdmins = [...new Set([...DEFAULT_ADMIN_PUBKEYS, ...nostrPubkeys, ...legacyAdmins])];
+      setPersistedAdmins(allAdmins);
+      return allAdmins;
     },
     staleTime: 15_000,
     retry: 2,
-    placeholderData: persistedAdmins,
-    initialData: DEFAULT_ADMIN_PUBKEYS,
+    initialData: persistedAdmins && persistedAdmins.length > 0 
+      ? persistedAdmins 
+      : [...new Set([...DEFAULT_ADMIN_PUBKEYS, ...getLegacyStoredAdmins()])],
   });
 
   return query;

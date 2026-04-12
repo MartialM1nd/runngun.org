@@ -5,6 +5,17 @@ import { SITE_OWNER_PUBKEY, ADMIN_LIST_DTAG, DEFAULT_ADMIN_PUBKEYS } from '@/lib
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useToast } from '@/hooks/useToast';
 
+const LEGACY_STORAGE_KEY = 'nostr:admins';
+
+function getLegacyStoredAdmins(): string[] {
+  try {
+    const stored = localStorage.getItem(LEGACY_STORAGE_KEY);
+    return stored ? JSON.parse(stored) : [];
+  } catch {
+    return [];
+  }
+}
+
 export function useAdminMutations() {
   const { nostr } = useNostr();
   const { user } = useCurrentUser();
@@ -42,7 +53,7 @@ export function useAdminMutations() {
         },
       ]);
 
-      let currentPubkeys: string[] = DEFAULT_ADMIN_PUBKEYS;
+      let currentPubkeys: string[] = [];
       if (events.length > 0) {
         const content = events[0].content;
         const parsed = JSON.parse(content);
@@ -53,7 +64,11 @@ export function useAdminMutations() {
         }
       }
 
-      if (currentPubkeys.some(pk => pk.toLowerCase() === pubkey.toLowerCase())) {
+      const legacyAdmins = getLegacyStoredAdmins();
+      const allExistingAdmins = [...DEFAULT_ADMIN_PUBKEYS, ...currentPubkeys, ...legacyAdmins];
+      const normalizedPubkey = pubkey.toLowerCase();
+
+      if (allExistingAdmins.some(pk => pk.toLowerCase() === normalizedPubkey)) {
         toast({
           title: 'Admin already exists',
           description: 'This pubkey is already an admin',
@@ -121,7 +136,7 @@ export function useAdminMutations() {
         },
       ]);
 
-      let currentPubkeys: string[] = DEFAULT_ADMIN_PUBKEYS;
+      let currentPubkeys: string[] = [];
       if (events.length > 0) {
         const content = events[0].content;
         const parsed = JSON.parse(content);
@@ -132,7 +147,11 @@ export function useAdminMutations() {
         }
       }
 
-      if (!currentPubkeys.some(pk => pk.toLowerCase() === pubkey.toLowerCase())) {
+      const legacyAdmins = getLegacyStoredAdmins();
+      const allExistingAdmins = [...DEFAULT_ADMIN_PUBKEYS, ...currentPubkeys, ...legacyAdmins];
+      const normalizedPubkey = pubkey.toLowerCase();
+
+      if (!allExistingAdmins.some(pk => pk.toLowerCase() === normalizedPubkey)) {
         toast({
           title: 'Admin not found',
           description: 'This pubkey is not in the admin list',
@@ -141,7 +160,7 @@ export function useAdminMutations() {
         return;
       }
 
-      const newPubkeys = currentPubkeys.filter((pk) => pk !== pubkey);
+      const newPubkeys = currentPubkeys.filter((pk) => pk.toLowerCase() !== normalizedPubkey);
 
       const event = await user.signer.signEvent({
         kind: 30078,

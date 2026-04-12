@@ -30,6 +30,7 @@ interface EventFormProps {
   onSuccess?: () => void;
   onCancel?: () => void;
   onSaveTemplate?: (name: string) => void;
+  onSaveTemplateData?: (data: FormState) => void;
 }
 
 function toDateStr(ts: number): string {
@@ -63,7 +64,7 @@ function calcDTags(start: number, end?: number): string[] {
   return Array.from(days).map(String);
 }
 
-export function EventForm({ existing, templateToLoad, onSuccess, onCancel, onSaveTemplate }: EventFormProps) {
+export function EventForm({ existing, templateToLoad, onSuccess, onCancel, onSaveTemplate, onSaveTemplateData }: EventFormProps) {
   const { mutate: publishEvent, isPending } = useNostrPublish();
   const { mutateAsync: uploadFile, isPending: isUploading } = useUploadFile();
   const { user } = useCurrentUser();
@@ -106,15 +107,16 @@ export function EventForm({ existing, templateToLoad, onSuccess, onCancel, onSav
   useEffect(() => {
     if (!templateToLoad) return;
     const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    const now = Math.floor(Date.now() / 1000);
     setForm({
       title: templateToLoad.title ?? '',
       summary: templateToLoad.summary ?? '',
       content: templateToLoad.content ?? '',
       location: templateToLoad.location ?? '',
       image: templateToLoad.image ?? '',
-      startDate: toDateStr(Math.floor(Date.now() / 1000)),
+      startDate: templateToLoad.startDate ?? toDateStr(now),
       startTime: templateToLoad.startTime ?? '08:00',
-      endDate: toDateStr(Math.floor(Date.now() / 1000)),
+      endDate: templateToLoad.endDate ?? toDateStr(now),
       endTime: templateToLoad.endTime ?? '17:00',
       tzid: templateToLoad.tzid ?? tz,
       links: templateToLoad.links?.length ? templateToLoad.links : [''],
@@ -123,6 +125,26 @@ export function EventForm({ existing, templateToLoad, onSuccess, onCancel, onSav
 
   function setField<K extends keyof FormState>(key: K, value: FormState[K]) {
     setForm((prev) => ({ ...prev, [key]: value }));
+  }
+
+  function handleStartDateChange(value: string) {
+    setForm((prev) => ({ ...prev, startDate: value }));
+
+    // Auto-set end date to next day at 5pm if start date is Sat/Sun
+    const date = new Date(value + 'T00:00:00');
+    const day = date.getDay();
+    if (day === 0 || day === 6) { // Sunday (0) or Saturday (6)
+      const nextDay = new Date(date);
+      nextDay.setDate(nextDay.getDate() + 1);
+      const y = nextDay.getFullYear();
+      const m = String(nextDay.getMonth() + 1).padStart(2, '0');
+      const d = String(nextDay.getDate()).padStart(2, '0');
+      setForm((prev) => ({
+        ...prev,
+        endDate: `${y}-${m}-${d}`,
+        endTime: '17:00',
+      }));
+    }
   }
 
   function setLink(index: number, value: string) {
@@ -189,6 +211,7 @@ export function EventForm({ existing, templateToLoad, onSuccess, onCancel, onSav
   function handleSaveTemplate() {
     const name = prompt('Enter template name:');
     if (name?.trim()) {
+      onSaveTemplateData?.(form);
       onSaveTemplate?.(name.trim());
     }
   }
@@ -224,6 +247,9 @@ export function EventForm({ existing, templateToLoad, onSuccess, onCancel, onSav
       ['title', form.title.trim()],
       ['start', String(start)],
       ['t', 'runngun'],
+      ['t', 'running'],
+      ['t', 'shooting'],
+      ['t', 'biathlon'],
     ];
 
     if (form.summary.trim()) tags.push(['summary', form.summary.trim()]);
@@ -299,7 +325,7 @@ export function EventForm({ existing, templateToLoad, onSuccess, onCancel, onSav
             id="ev-start-date"
             type="date"
             value={form.startDate}
-            onChange={(e) => setField('startDate', e.target.value)}
+            onChange={(e) => handleStartDateChange(e.target.value)}
             required
           />
         </div>

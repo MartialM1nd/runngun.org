@@ -283,7 +283,7 @@ function EventsTab() {
   const [editingEvent, setEditingEvent] = useState<CalendarEvent | undefined>(undefined);
   const [showPast, setShowPast] = useState(false);
   const [templates, setTemplates] = useState<EventTemplate[]>(getTemplates);
-  const [templateToLoad, setTemplateToLoad] = useState<Partial<FormState> | undefined>(undefined);
+  const [templateToLoad, setTemplateToLoad] = useState<FormState | undefined>(undefined);
 
   const { upcoming, past } = events ? splitEvents(events) : { upcoming: [], past: [] };
 
@@ -308,6 +308,10 @@ function EventsTab() {
 
   function handleDeleted() {
     queryClient.invalidateQueries({ queryKey: ['calendar-events'] });
+  }
+
+  function handleSaveTemplateData(data: FormState) {
+    setTemplateToLoad(data);
   }
 
   function handleSaveTemplate(name: string) {
@@ -386,6 +390,7 @@ function EventsTab() {
             onSuccess={handleFormSuccess}
             onCancel={handleCancelForm}
             onSaveTemplate={handleSaveTemplate}
+            onSaveTemplateData={handleSaveTemplateData}
           />
         </div>
       ) : (
