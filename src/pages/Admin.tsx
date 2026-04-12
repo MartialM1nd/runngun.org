@@ -47,7 +47,9 @@ import { useNostrPublish } from '@/hooks/useNostrPublish';
 import { useToast } from '@/hooks/useToast';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useAuthors } from '@/hooks/useAuthors';
-import { ADMIN_PUBKEYS, getAllAdmins, addAdmin, removeAdmin } from '@/lib/admins';
+import { useAdminList } from '@/hooks/useAdminList';
+import { useAdminMutations } from '@/hooks/useAdminMutations';
+import { SITE_OWNER_PUBKEY, DEFAULT_ADMIN_PUBKEYS } from '@/lib/config';
 import { EventForm, type FormState } from '@/components/EventForm';
 import { genUserName } from '@/lib/genUserName';
 
@@ -460,9 +462,9 @@ function IdentityTab() {
   const [isAdding, setIsAdding] = useState(false);
 
   const { user, users, metadata: currentUserMetadata } = useCurrentUser();
-  const allAdmins = getAllAdmins();
-  const hardcodedCount = ADMIN_PUBKEYS.length;
-  const { data: adminProfiles } = useAuthors(allAdmins);
+  const { data: adminList = DEFAULT_ADMIN_PUBKEYS, isLoading: adminLoading } = useAdminList();
+  const { data: adminProfiles } = useAuthors(adminList);
+  const { addAdmin, removeAdmin, isSiteOwner } = useAdminMutations();
 
   const handleAddAdmin = () => {
     const input = newAdminInput.trim();
@@ -489,7 +491,7 @@ function IdentityTab() {
       return;
     }
 
-    if (allAdmins.some(pk => pk.toLowerCase() === pubkey.toLowerCase())) {
+    if (adminList.some(pk => pk.toLowerCase() === pubkey.toLowerCase())) {
       toast({
         title: 'Admin already exists',
         description: 'This pubkey is already an admin',
@@ -501,18 +503,10 @@ function IdentityTab() {
     addAdmin(pubkey);
     setNewAdminInput('');
     setIsAdding(false);
-    toast({
-      title: 'Admin added',
-      description: 'New admin has been added successfully',
-    });
   };
 
   const handleRemoveAdmin = (pubkey: string) => {
     removeAdmin(pubkey);
-    toast({
-      title: 'Admin removed',
-      description: 'Admin has been removed successfully',
-    });
   };
 
   return (
@@ -532,7 +526,6 @@ function IdentityTab() {
               const profile = i === 0 ? currentUserMetadata : adminProfiles?.[u.pubkey];
               const displayName = profile?.name ?? profile?.display_name ?? genUserName(u.pubkey);
               const picture = profile?.picture;
-              const nip05 = profile?.nip05;
               const isCurrent = i === 0;
 
               return (
@@ -557,13 +550,8 @@ function IdentityTab() {
                         </Badge>
                       )}
                     </div>
-                    {nip05 && (
-                      <span className="text-xs text-muted-foreground">
-                        {nip05}
-                      </span>
-                    )}
-                    <span className="font-mono text-xs text-muted-foreground truncate block" title={npub}>
-                      {npub.slice(0, 20)}...{npub.slice(-8)}
+                    <span className="font-mono text-xs text-muted-foreground break-all">
+                      {npub}
                     </span>
                   </div>
                 </div>
@@ -587,10 +575,10 @@ function IdentityTab() {
           Admin Accounts
         </h2>
         <p className="text-sm text-muted-foreground">
-          Manage admin access for this site. Hardcoded admins cannot be removed.
+          Only the site owner can manage admin access.
         </p>
 
-        {isAdding ? (
+        {isSiteOwner && isAdding ? (
           <div className="flex gap-2">
             <Input
               placeholder="Enter npub or hex pubkey"
@@ -610,7 +598,7 @@ function IdentityTab() {
               Cancel
             </Button>
           </div>
-        ) : (
+        ) : isSiteOwner ? (
           <Button
             variant="outline"
             size="sm"
@@ -620,64 +608,74 @@ function IdentityTab() {
             <Plus className="w-4 h-4 mr-2" />
             Add Admin
           </Button>
-        )}
+          ) : null}
 
         <div className="space-y-2">
-          {allAdmins.map((pk, i) => {
-            let npub = pk;
-            try {
-              npub = nip19.npubEncode(pk);
-            } catch {
-              // keep as hex if encoding fails
-            }
-            const isHardcoded = i < hardcodedCount;
-            const profile = adminProfiles?.[pk];
-            const displayName = profile?.metadata?.name ?? profile?.metadata?.display_name ?? genUserName(pk);
-            const picture = profile?.metadata?.picture;
-            const nip05 = profile?.metadata?.nip05;
-
-            return (
-              <div
-                key={pk}
-                className="flex items-center gap-3 p-3 rounded-md border border-border bg-muted/20"
-              >
-                <Avatar className="h-10 w-10 border shrink-0">
-                  {picture && <AvatarImage src={picture} alt={displayName} />}
-                  <AvatarFallback className="text-xs font-mono bg-muted">
-                    {displayName.slice(0, 2).toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <span className="font-condensed font-bold text-foreground truncate">
-                      {displayName}
-                    </span>
-                    <Badge variant="outline" className="text-xs shrink-0 font-condensed">
-                      {isHardcoded ? (i === 0 ? 'Owner' : 'Hardcoded') : 'Admin'}
-                    </Badge>
+          {adminLoading ? (
+            <div className="space-y-2">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="flex items-center gap-3 p-3 rounded-md border border-border bg-muted/20">
+                  <Skeleton className="h-10 w-10 rounded-full" />
+                  <div className="flex-1 space-y-2">
+                    <Skeleton className="h-4 w-32" />
+                    <Skeleton className="h-3 w-full" />
                   </div>
-                  {nip05 && (
-                    <span className="text-xs text-muted-foreground">
-                      {nip05}
-                    </span>
-                  )}
-                  <span className="font-mono text-xs text-muted-foreground truncate block" title={npub}>
-                    {npub.slice(0, 20)}...{npub.slice(-8)}
-                  </span>
                 </div>
-                {!isHardcoded && (
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="size-6 text-muted-foreground hover:text-destructive shrink-0"
-                    onClick={() => handleRemoveAdmin(pk)}
+              ))}
+            </div>
+          ) : (
+            <>
+              {adminList.map((pk) => {
+                let npub = pk;
+                try {
+                  npub = nip19.npubEncode(pk);
+                } catch {
+                  // keep as hex if encoding fails
+                }
+                const isOwner = pk === SITE_OWNER_PUBKEY;
+                const profile = adminProfiles?.[pk];
+                const displayName = profile?.metadata?.name ?? profile?.metadata?.display_name ?? genUserName(pk);
+                const picture = profile?.metadata?.picture;
+
+                return (
+                  <div
+                    key={pk}
+                    className="flex items-center gap-3 p-3 rounded-md border border-border bg-muted/20"
                   >
-                    <X className="h-3.5 w-3.5" />
-                  </Button>
-                )}
-              </div>
-            );
-          })}
+                    <Avatar className="h-10 w-10 border shrink-0">
+                      {picture && <AvatarImage src={picture} alt={displayName} />}
+                      <AvatarFallback className="text-xs font-mono bg-muted">
+                        {displayName.slice(0, 2).toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="font-condensed font-bold text-foreground truncate">
+                          {displayName}
+                        </span>
+                        <Badge variant="outline" className="text-xs shrink-0 font-condensed">
+                          {isOwner ? 'Owner' : 'Admin'}
+                        </Badge>
+                      </div>
+                      <span className="font-mono text-xs text-muted-foreground break-all">
+                        {npub}
+                      </span>
+                    </div>
+                    {isOwner && isSiteOwner && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="size-6 text-muted-foreground hover:text-destructive shrink-0"
+                        onClick={() => handleRemoveAdmin(pk)}
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </Button>
+                    )}
+                  </div>
+                );
+              })}
+            </>
+          )}
         </div>
       </div>
     </div>
@@ -741,18 +739,18 @@ export default function Admin() {
               Relays
             </TabsTrigger>
             <TabsTrigger
-              value="identity"
-              className="font-condensed font-bold uppercase tracking-wide text-sm data-[state=active]:bg-primary data-[state=active]:text-primary-foreground py-2.5"
-            >
-              <User className="w-4 h-4 mr-1.5" />
-              Identity
-            </TabsTrigger>
-            <TabsTrigger
               value="blossom"
               className="font-condensed font-bold uppercase tracking-wide text-sm data-[state=active]:bg-primary data-[state=active]:text-primary-foreground py-2.5"
             >
               <Server className="w-4 h-4 mr-1.5" />
               Blossom
+            </TabsTrigger>
+            <TabsTrigger
+              value="identity"
+              className="font-condensed font-bold uppercase tracking-wide text-sm data-[state=active]:bg-primary data-[state=active]:text-primary-foreground py-2.5"
+            >
+              <User className="w-4 h-4 mr-1.5" />
+              Identity
             </TabsTrigger>
           </TabsList>
 
@@ -764,12 +762,12 @@ export default function Admin() {
             <RelaysTab />
           </TabsContent>
 
-          <TabsContent value="identity" className="mt-0">
-            <IdentityTab />
-          </TabsContent>
-
           <TabsContent value="blossom" className="mt-0">
             <BlossomTab />
+          </TabsContent>
+
+          <TabsContent value="identity" className="mt-0">
+            <IdentityTab />
           </TabsContent>
         </Tabs>
       </div>

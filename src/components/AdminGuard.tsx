@@ -1,7 +1,8 @@
 import { type ReactNode } from 'react';
-import { Shield, ShieldOff, Target } from 'lucide-react';
+import { Shield, ShieldOff, Target, Loader2 } from 'lucide-react';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
-import { isAdmin } from '@/lib/admins';
+import { useAdminList } from '@/hooks/useAdminList';
+import { DEFAULT_ADMIN_PUBKEYS } from '@/lib/config';
 import { LoginArea } from '@/components/auth/LoginArea';
 
 interface AdminGuardProps {
@@ -12,10 +13,29 @@ interface AdminGuardProps {
  * AdminGuard — wraps admin-only content behind Nostr authentication.
  *
  * Shows a login prompt if not logged in, and an "unauthorized" message
- * if the logged-in pubkey is not in the ADMIN_PUBKEYS list.
+ * if the logged-in pubkey is not in the admin list (stored on Nostr).
  */
 export function AdminGuard({ children }: AdminGuardProps) {
   const { user } = useCurrentUser();
+  const { data: adminList, isLoading } = useAdminList();
+
+  // Use DEFAULT_ADMIN_PUBKEYS if adminList is undefined/null
+  const effectiveAdminList = adminList ?? DEFAULT_ADMIN_PUBKEYS;
+  const isUserAdmin = user ? effectiveAdminList.includes(user.pubkey) : false;
+
+  // Loading admin list
+  if (isLoading && !adminList) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center px-4">
+        <div className="w-full max-w-sm text-center space-y-6">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full border border-primary/40 bg-primary/10 mx-auto">
+            <Loader2 className="w-8 h-8 text-primary animate-spin" />
+          </div>
+          <p className="text-sm text-muted-foreground">Checking admin access...</p>
+        </div>
+      </div>
+    );
+  }
 
   // Not logged in
   if (!user) {
@@ -49,7 +69,7 @@ export function AdminGuard({ children }: AdminGuardProps) {
   }
 
   // Logged in but not an admin
-  if (!isAdmin(user.pubkey)) {
+  if (!isUserAdmin) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center px-4">
         <div className="w-full max-w-sm text-center space-y-6">
