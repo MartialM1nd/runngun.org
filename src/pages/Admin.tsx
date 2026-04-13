@@ -292,10 +292,6 @@ function EventsTab() {
     queryClient.invalidateQueries({ queryKey: ['calendar-events'] });
   }
 
-  function handleSaveTemplateData(data: FormState) {
-    setTemplateToLoad(data);
-  }
-
   function handleSaveTemplate(name: string) {
     const newTemplate: EventTemplate = {
       id: crypto.randomUUID(),
@@ -383,7 +379,7 @@ function EventsTab() {
             onSuccess={handleFormSuccess}
             onCancel={handleCancelForm}
             onSaveTemplate={handleSaveTemplate}
-            onSaveTemplateData={handleSaveTemplateData}
+            onSaveTemplateData={(data) => setTemplateToLoad(data)}
           />
         </div>
       ) : (
