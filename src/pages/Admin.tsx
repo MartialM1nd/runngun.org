@@ -49,6 +49,7 @@ import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useAuthor } from '@/hooks/useAuthor';
 import { useAuthors } from '@/hooks/useAuthors';
 import { useAdminList } from '@/hooks/useAdminList';
+import { useAdminMutations } from '@/hooks/useAdminMutations';
 import { useTemplateList, type EventTemplate } from '@/hooks/useTemplateList';
 import { useTemplateMutations } from '@/hooks/useTemplateMutations';
 import { SITE_OWNER_PUBKEY, DEFAULT_ADMIN_PUBKEYS } from '@/lib/config';
