@@ -155,12 +155,12 @@ export function EventCard({ calEvent, isPast = false }: EventCardProps) {
                 <span className="truncate">{location}</span>
               </span>
             )}
-            {price && (
-              <span className="flex items-center gap-1 text-xs text-primary font-medium">
-                {price}
-              </span>
-            )}
           </div>
+          {price && (
+            <div className="mt-1 text-xs text-primary font-medium">
+              {price}
+            </div>
+          )}
         </div>
 
         {/* Right: Event image (if present) */}
