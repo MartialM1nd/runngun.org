@@ -58,7 +58,7 @@ const Schedule = () => {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <Link to="/" className="flex items-center justify-center w-10 h-10 rounded-full border border-primary/40 bg-primary/10 hover:bg-primary/20 transition-colors">
-                <Target className="w-5 h-5 text-primary" />
+                <img src="/runngun-shooter-logo.png" alt="Run & Gun" className="w-6 h-6 object-contain" />
               </Link>
               <div>
                 <h1 className="font-condensed text-2xl font-bold uppercase tracking-wide text-foreground">
@@ -130,7 +130,7 @@ const Schedule = () => {
       <footer className="border-t border-border mt-20 py-8">
         <div className="container mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
           <div className="flex items-center gap-2">
-            <Target className="w-4 h-4 text-primary" />
+            <img src="/runngun-shooter-logo.png" alt="Run & Gun" className="w-6 h-6 object-contain" />
             <span className="font-condensed font-bold tracking-wide uppercase text-foreground">
               runngun.org
             </span>

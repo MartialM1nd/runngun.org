@@ -150,7 +150,7 @@ const Calendar = () => {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <Link to="/" className="flex items-center justify-center w-10 h-10 rounded-full border border-primary/40 bg-primary/10 hover:bg-primary/20 transition-colors">
-                <Target className="w-5 h-5 text-primary" />
+                <img src="/runngun-shooter-logo.png" alt="Run & Gun" className="w-6 h-6 object-contain" />
               </Link>
               <div>
                 <h1 className="font-condensed text-2xl font-bold uppercase tracking-wide text-foreground">

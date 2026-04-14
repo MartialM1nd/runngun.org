@@ -34,12 +34,12 @@ const Index = () => {
           }}
         />
 
-        <div className="container mx-auto px-4 py-15 sm:py-21 text-center">
+        <div className="container mx-auto px-4 pt-8 sm:pt-12 text-center">
           {/* Logo */}
           <img
             src="/runngun-shooter-logo.png"
             alt="Run & Gun"
-            className="w-24 h-24 mx-auto mb-6 animate-fade-in object-contain"
+            className="w-28 h-28 mx-auto mb-6 animate-fade-in object-contain"
           />
 
           {/* Wordmark */}
@@ -116,9 +116,9 @@ const Index = () => {
       <footer className="border-t border-border mt-20 py-8">
         <div className="container mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
           <div className="flex items-center gap-2">
-            <Target className="w-4 h-4 text-primary" />
+            <img src="/runngun-shooter-logo.png" alt="Run & Gun" className="w-6 h-6 object-contain" />
             <span className="font-condensed font-bold tracking-wide uppercase text-foreground">
-runngun.org
+              runngun.org
             </span>
             <span className="text-muted-foreground/50">·</span>
             <span>runngun.org</span>
@@ -150,6 +150,7 @@ runngun.org
 function SectionHeader({ label, accent = false }: { label: string; accent?: boolean }) {
   return (
     <div className="flex items-center gap-3 mb-6">
+      <img src="/runngun-shooter-logo.png" alt="" className="w-6 h-6 object-contain shrink-0" />
       {accent && <div className="w-1 h-6 bg-primary rounded-full shrink-0" />}
       <h2 className={`
         font-condensed text-2xl font-bold uppercase tracking-wide
