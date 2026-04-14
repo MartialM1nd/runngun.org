@@ -15,6 +15,7 @@ import {
   Plus,
   X,
   Server,
+  Shield,
 } from 'lucide-react';
 import { nip19 } from 'nostr-tools';
 import { useQueryClient } from '@tanstack/react-query';
@@ -734,22 +735,33 @@ export default function Admin() {
 
   return (
     <AdminGuard>
-      <div className="container mx-auto px-4 py-8 max-w-3xl">
-        <div className="mb-8">
-          <Link to="/" className="block mb-2">
-            <span className="font-condensed text-3xl font-bold uppercase tracking-wide text-foreground hover:text-primary transition-colors">
-              runngun.org
-            </span>
-          </Link>
-          <h1 className="font-condensed text-lg font-bold uppercase tracking-wide text-muted-foreground">
-            Event Admin
-          </h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Manage events, relays, Blossom servers, and your Nostr identity for runngun.org.
-          </p>
-        </div>
+      <div className="min-h-screen bg-background font-sans flex flex-col">
+        {/* Header */}
+        <header className="relative isolate overflow-hidden border-b border-border">
+          <div className="absolute inset-0 -z-10 bg-gradient-to-br from-[hsl(220_20%_5%)] via-[hsl(220_15%_8%)] to-[hsl(28_30%_8%)]" />
+          
+          <div className="container mx-auto px-4 py-8">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Link to="/" className="flex items-center justify-center w-10 h-10 rounded-full border border-primary/40 bg-primary/10 hover:bg-primary/20 transition-colors">
+                  <img src="/logo-vector-circle.png" alt="Run & Gun" className="w-10 h-10 object-contain" />
+                </Link>
+                <div>
+                  <h1 className="font-condensed text-2xl font-bold uppercase tracking-wide text-foreground">
+                    ADMIN
+                  </h1>
+                  <p className="text-sm text-muted-foreground">
+                    Manage events, relays and accounts
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </header>
 
-        <Tabs defaultValue="events" className="w-full">
+        {/* Main Content */}
+        <main className="flex-1 container mx-auto px-4 py-8 max-w-3xl">
+          <Tabs defaultValue="events" className="w-full">
           <TabsList className="w-full mb-6 h-auto p-1 bg-muted/30 border border-border rounded-lg grid grid-cols-4">
             <TabsTrigger
               value="events"
@@ -797,6 +809,39 @@ export default function Admin() {
             <IdentityTab />
           </TabsContent>
         </Tabs>
+        </main>
+
+        {/* Footer */}
+        <footer className="border-t border-border mt-20 py-8">
+          <div className="container mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
+            <div className="flex items-center gap-2">
+              <img src="/logo-vector-circle.png" alt="Run & Gun" className="w-6 h-6 object-contain" />
+              <span className="font-condensed font-bold tracking-wide uppercase text-foreground">
+                runngun.org
+              </span>
+              <span className="text-muted-foreground/50">·</span>
+              <span>runngun.org</span>
+            </div>
+            <div className="flex items-center gap-4">
+              <Link
+                to="/admin"
+                className="flex items-center gap-1.5 hover:text-primary transition-colors"
+              >
+                <Shield className="w-3.5 h-3.5" />
+                Admin
+              </Link>
+              <span className="text-muted-foreground/40">·</span>
+              <a
+                href="https://shakespeare.diy"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-primary transition-colors"
+              >
+                Vibed with Shakespeare
+              </a>
+            </div>
+          </div>
+        </footer>
       </div>
     </AdminGuard>
   );
