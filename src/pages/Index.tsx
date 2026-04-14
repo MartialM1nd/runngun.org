@@ -35,10 +35,12 @@ const Index = () => {
         />
 
         <div className="container mx-auto px-4 py-15 sm:py-21 text-center">
-          {/* Icon badge */}
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full border border-primary/40 bg-primary/10 mb-6 animate-fade-in">
-            <Target className="w-8 h-8 text-primary" />
-          </div>
+          {/* Logo */}
+          <img
+            src="/runngun-shooter-logo.png"
+            alt="Run & Gun"
+            className="w-24 h-24 mx-auto mb-6 animate-fade-in object-contain"
+          />
 
           {/* Wordmark */}
           <h1 className="font-condensed text-6xl sm:text-8xl font-bold tracking-tight text-foreground uppercase animate-fade-in-up">
