@@ -302,6 +302,7 @@ function EventsTab() {
       content: templateToLoad?.content ?? '',
       location: templateToLoad?.location ?? '',
       image: templateToLoad?.image ?? '',
+      price: templateToLoad?.price ?? '',
       links: templateToLoad?.links ?? [],
     };
     saveTemplate(newTemplate);
@@ -314,6 +315,7 @@ function EventsTab() {
       content: template.content,
       location: template.location,
       image: template.image,
+      price: template.price ?? '',
       startDate: '',
       startTime: '08:00',
       endDate: '',

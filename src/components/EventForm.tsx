@@ -16,6 +16,7 @@ export interface FormState {
   content: string;
   location: string;
   image: string;
+  price: string;
   startDate: string;
   startTime: string;
   endDate: string;
@@ -79,6 +80,7 @@ export function EventForm({ existing, templateToLoad, onSuccess, onCancel, onSav
     content: '',
     location: '',
     image: '',
+    price: '',
     startDate: toDateStr(Math.floor(Date.now() / 1000)),
     startTime: '08:00',
     endDate: toDateStr(Math.floor(Date.now() / 1000)),
@@ -95,6 +97,7 @@ export function EventForm({ existing, templateToLoad, onSuccess, onCancel, onSav
       content: existing.content,
       location: existing.location ?? '',
       image: existing.image ?? '',
+      price: existing.event.tags.find(([t]) => t === 'price')?.[1] ?? '',
       startDate: toDateStr(existing.start),
       startTime: toTimeStr(existing.start),
       endDate: existing.end ? toDateStr(existing.end) : toDateStr(existing.start),
@@ -114,6 +117,7 @@ export function EventForm({ existing, templateToLoad, onSuccess, onCancel, onSav
       content: templateToLoad.content ?? '',
       location: templateToLoad.location ?? '',
       image: templateToLoad.image ?? '',
+      price: templateToLoad.price ?? '',
       startDate: templateToLoad.startDate ?? toDateStr(now),
       startTime: templateToLoad.startTime ?? '08:00',
       endDate: templateToLoad.endDate ?? toDateStr(now),
@@ -260,6 +264,7 @@ export function EventForm({ existing, templateToLoad, onSuccess, onCancel, onSav
     }
     if (form.location.trim()) tags.push(['location', form.location.trim()]);
     if (form.image.trim()) tags.push(['image', form.image.trim()]);
+    if (form.price.trim()) tags.push(['price', form.price.trim()]);
     for (const link of validLinks) tags.push(['r', link.trim()]);
     for (const day of dTags) tags.push(['D', day]);
 
@@ -390,6 +395,18 @@ export function EventForm({ existing, templateToLoad, onSuccess, onCancel, onSav
           placeholder="e.g., Broken Spur Ranch, Burnet TX"
           value={form.location}
           onChange={(e) => setField('location', e.target.value)}
+        />
+      </div>
+
+      <div className="space-y-1.5">
+        <Label htmlFor="ev-price" className="font-condensed font-600 uppercase text-xs tracking-wide">
+          Price
+        </Label>
+        <Input
+          id="ev-price"
+          placeholder="e.g., $20, Free, Pay what you can"
+          value={form.price}
+          onChange={(e) => setField('price', e.target.value)}
         />
       </div>
 

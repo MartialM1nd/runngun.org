@@ -14,6 +14,7 @@ export interface CalendarEvent {
   startTzid: string | undefined;
   location: string | undefined;
   image: string | undefined;
+  price: string | undefined;
   links: string[];
   tags: string[];
 }
@@ -52,6 +53,7 @@ export function parseCalendarEvent(event: NostrEvent): CalendarEvent {
   const startTzid = getTag(event, 'start_tzid');
   const location = getTag(event, 'location');
   const image = getTag(event, 'image');
+  const price = getTag(event, 'price');
   const links = getAllTags(event, 'r');
   const tags = getAllTags(event, 't');
 
@@ -66,6 +68,7 @@ export function parseCalendarEvent(event: NostrEvent): CalendarEvent {
     startTzid,
     location,
     image,
+    price,
     links,
     tags,
   };

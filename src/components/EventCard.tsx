@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { nip19 } from 'nostr-tools';
-import { MapPin, Clock, ExternalLink, Calendar } from 'lucide-react';
+import { MapPin, Clock, ExternalLink, Calendar, DollarSign } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import type { CalendarEvent } from '@/hooks/useCalendarEvents';
 
@@ -68,7 +68,7 @@ function getDayNum(start: number): string {
 }
 
 export function EventCard({ calEvent, isPast = false }: EventCardProps) {
-  const { event, title, summary, start, end, startTzid, location, image } = calEvent;
+  const { event, title, summary, start, end, startTzid, location, image, price } = calEvent;
 
   // Build naddr for the detail link (CRITICAL: must include author for secure filtering)
   const naddr = nip19.naddrEncode({
@@ -153,6 +153,12 @@ export function EventCard({ calEvent, isPast = false }: EventCardProps) {
               <span className="flex items-center gap-1 text-xs text-muted-foreground truncate max-w-xs">
                 <MapPin className="h-3 w-3 shrink-0" />
                 <span className="truncate">{location}</span>
+              </span>
+            )}
+            {price && (
+              <span className="flex items-center gap-1 text-xs text-primary font-medium">
+                <DollarSign className="h-3 w-3 shrink-0" />
+                {price}
               </span>
             )}
           </div>

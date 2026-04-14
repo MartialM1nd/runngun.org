@@ -11,6 +11,7 @@ export interface EventTemplate {
   content: string;
   location: string;
   image: string;
+  price: string;
   links: string[];
 }
 
