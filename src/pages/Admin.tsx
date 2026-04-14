@@ -56,6 +56,7 @@ import { useTemplateMutations } from '@/hooks/useTemplateMutations';
 import { SITE_OWNER_PUBKEY, DEFAULT_ADMIN_PUBKEYS } from '@/lib/config';
 import { EventForm, type FormState } from '@/components/EventForm';
 import { genUserName } from '@/lib/genUserName';
+import { LoginArea } from '@/components/auth/LoginArea';
 
 // ─── Event Manager Tab ──────────────────────────────────────────────────────
 
@@ -755,6 +756,7 @@ export default function Admin() {
                   </p>
                 </div>
               </div>
+              <LoginArea className="max-w-48" />
             </div>
           </div>
         </header>

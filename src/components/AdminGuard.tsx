@@ -1,5 +1,5 @@
 import { type ReactNode } from 'react';
-import { Shield, ShieldOff, Target, Loader2 } from 'lucide-react';
+import { Shield, ShieldOff, Loader2 } from 'lucide-react';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useAdminList } from '@/hooks/useAdminList';
 import { DEFAULT_ADMIN_PUBKEYS } from '@/lib/config';
@@ -106,28 +106,5 @@ export function AdminGuard({ children }: AdminGuardProps) {
   }
 
   // Authorized — render children
-  return (
-    <div className="min-h-screen bg-background">
-      {/* Admin header bar */}
-      <div className="border-b border-border bg-card/60 backdrop-blur-sm sticky top-0 z-40">
-        <div className="container mx-auto px-4 py-3 flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <Target className="w-5 h-5 text-primary shrink-0" />
-            <span className="font-condensed text-lg font-bold uppercase tracking-wide text-foreground">
-              Run &amp; Gun
-            </span>
-            <span className="text-muted-foreground/40 hidden sm:inline">·</span>
-            <span className="font-condensed text-sm uppercase tracking-widest text-primary hidden sm:inline">
-              Admin
-            </span>
-          </div>
-          <div className="flex items-center gap-3">
-            <LoginArea className="max-w-48" />
-          </div>
-        </div>
-      </div>
-
-      {children}
-    </div>
-  );
+  return <>{children}</>;
 }
