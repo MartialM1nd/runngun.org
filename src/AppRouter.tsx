@@ -7,6 +7,7 @@ import Calendar from "./pages/Calendar";
 import Schedule from "./pages/Schedule";
 import { NIP19Page } from "./pages/NIP19Page";
 import NotFound from "./pages/NotFound";
+import RSS from "./pages/RSS";
 
 export function AppRouter() {
   return (
@@ -20,6 +21,8 @@ export function AppRouter() {
         <Route path="/calendar" element={<Calendar />} />
         {/* Admin panel — Nostr auth gated */}
         <Route path="/admin" element={<Admin />} />
+        {/* RSS feed */}
+        <Route path="/rss.xml" element={<RSS />} />
         {/* NIP-19 route for naddr1 calendar event detail pages */}
         <Route path="/:nip19" element={<NIP19Page />} />
         {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
