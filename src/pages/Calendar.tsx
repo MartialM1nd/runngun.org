@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useSeoMeta } from '@unhead/react';
 import { Link } from 'react-router-dom';
-import { Target, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Target, ChevronLeft, ChevronRight, Shield } from 'lucide-react';
 import { useMonthEvents } from '@/hooks/useMonthEvents';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { EventCard } from '@/components/EventCard';
@@ -141,16 +141,16 @@ const Calendar = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background font-sans">
+    <div className="min-h-screen bg-background font-sans flex flex-col">
       {/* Header */}
-      <header className="relative isolate overflow-hidden border-b border-border">
+      <header className="relative isolate overflow-hidden border-b border-border shrink-0">
         <div className="absolute inset-0 -z-10 bg-gradient-to-br from-[hsl(220_20%_5%)] via-[hsl(220_15%_8%)] to-[hsl(28_30%_8%)]" />
         
         <div className="container mx-auto px-4 py-8">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <Link to="/" className="flex items-center justify-center w-10 h-10 rounded-full border border-primary/40 bg-primary/10 hover:bg-primary/20 transition-colors">
-                <img src="/runngun-shooter-logo.png" alt="Run & Gun" className="w-6 h-6 object-contain" />
+                <img src="/logo-vector-circle.png" alt="Run & Gun" className="w-10 h-10 object-contain" />
               </Link>
               <div>
                 <h1 className="font-condensed text-2xl font-bold uppercase tracking-wide text-foreground">
@@ -176,7 +176,7 @@ const Calendar = () => {
       </header>
 
       {/* Calendar */}
-      <main className="container mx-auto px-4 py-8 max-w-5xl">
+      <main className="flex-1 container mx-auto px-4 py-8 max-w-5xl">
         {/* Month navigation */}
         <div className="flex items-center justify-between mb-6">
           <Button
@@ -266,6 +266,38 @@ const Calendar = () => {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Footer */}
+      <footer className="border-t border-border mt-20 py-8">
+        <div className="container mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
+          <div className="flex items-center gap-2">
+            <img src="/logo-vector-circle.png" alt="Run & Gun" className="w-6 h-6 object-contain" />
+            <span className="font-condensed font-bold tracking-wide uppercase text-foreground">
+              runngun.org
+            </span>
+            <span className="text-muted-foreground/50">·</span>
+            <span>runngun.org</span>
+          </div>
+          <div className="flex items-center gap-4">
+            <Link
+              to="/admin"
+              className="flex items-center gap-1.5 hover:text-primary transition-colors"
+            >
+              <Shield className="w-3.5 h-3.5" />
+              Admin
+            </Link>
+            <span className="text-muted-foreground/40">·</span>
+            <a
+              href="https://shakespeare.diy"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-primary transition-colors"
+            >
+              Vibed with Shakespeare
+            </a>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 };
