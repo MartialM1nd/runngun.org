@@ -11,6 +11,7 @@ import {
   ArrowLeft,
   ExternalLink,
   AlertCircle,
+  DollarSign,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -58,6 +59,7 @@ function EventDetailView({ event }: { event: NostrEvent }) {
   const summary = getTag(event, 'summary') ?? '';
   const image = getTag(event, 'image');
   const location = getTag(event, 'location');
+  const price = getTag(event, 'price');
   const startRaw = getTag(event, 'start');
   const endRaw = getTag(event, 'end');
   const tzid = getTag(event, 'start_tzid');
@@ -174,6 +176,13 @@ function EventDetailView({ event }: { event: NostrEvent }) {
               label="Location"
               value={location}
               className="sm:col-span-2"
+            />
+          )}
+          {price && (
+            <DetailRow
+              icon={<DollarSign className="w-4 h-4 text-primary shrink-0" />}
+              label="Price"
+              value={price}
             />
           )}
         </div>

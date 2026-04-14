@@ -157,7 +157,6 @@ export function EventCard({ calEvent, isPast = false }: EventCardProps) {
             )}
             {price && (
               <span className="flex items-center gap-1 text-xs text-primary font-medium">
-                <DollarSign className="h-3 w-3 shrink-0" />
                 {price}
               </span>
             )}

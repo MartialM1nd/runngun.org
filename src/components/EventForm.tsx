@@ -7,8 +7,25 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Loader2, Plus, X, Save, Upload, Image as ImageIcon } from 'lucide-react';
 import type { CalendarEvent } from '@/hooks/useCalendarEvents';
+
+const US_TIMEZONES = [
+  { value: 'America/Chicago', label: 'Central (Chicago)' },
+  { value: 'America/Denver', label: 'Mountain (Denver)' },
+  { value: 'America/Los_Angeles', label: 'Pacific (Los Angeles)' },
+  { value: 'America/New_York', label: 'Eastern (New York)' },
+  { value: 'America/Anchorage', label: 'Alaska (Anchorage)' },
+  { value: 'Pacific/Honolulu', label: 'Hawaii (Honolulu)' },
+  { value: 'America/Phoenix', label: 'Arizona (Phoenix)' },
+];
 
 export interface FormState {
   title: string;
@@ -73,6 +90,7 @@ export function EventForm({ existing, templateToLoad, onSuccess, onCancel, onSav
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const browserTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const defaultTz = US_TIMEZONES.some(tz => tz.value === browserTz) ? browserTz : 'America/Chicago';
 
   const [form, setForm] = useState<FormState>({
     title: '',
@@ -85,7 +103,7 @@ export function EventForm({ existing, templateToLoad, onSuccess, onCancel, onSav
     startTime: '08:00',
     endDate: toDateStr(Math.floor(Date.now() / 1000)),
     endTime: '17:00',
-    tzid: browserTz,
+    tzid: defaultTz,
     links: [''],
   });
 
@@ -122,7 +140,7 @@ export function EventForm({ existing, templateToLoad, onSuccess, onCancel, onSav
       startTime: templateToLoad.startTime ?? '08:00',
       endDate: templateToLoad.endDate ?? toDateStr(now),
       endTime: templateToLoad.endTime ?? '17:00',
-      tzid: templateToLoad.tzid ?? tz,
+      tzid: templateToLoad.tzid ?? defaultTz,
       links: templateToLoad.links?.length ? templateToLoad.links : [''],
     });
   }, [templateToLoad]);
@@ -377,13 +395,18 @@ export function EventForm({ existing, templateToLoad, onSuccess, onCancel, onSav
         <Label htmlFor="ev-tzid" className="font-condensed font-600 uppercase text-xs tracking-wide">
           Timezone
         </Label>
-        <Input
-          id="ev-tzid"
-          placeholder="e.g., America/Chicago"
-          value={form.tzid}
-          onChange={(e) => setField('tzid', e.target.value)}
-        />
-        <p className="text-xs text-muted-foreground">IANA timezone name (e.g., America/New_York)</p>
+        <Select value={form.tzid} onValueChange={(value) => setField('tzid', value)}>
+          <SelectTrigger id="ev-tzid">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {US_TIMEZONES.map((tz) => (
+              <SelectItem key={tz.value} value={tz.value}>
+                {tz.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       <div className="space-y-1.5">
