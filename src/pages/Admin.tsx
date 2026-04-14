@@ -736,7 +736,12 @@ export default function Admin() {
     <AdminGuard>
       <div className="container mx-auto px-4 py-8 max-w-3xl">
         <div className="mb-8">
-          <h1 className="font-condensed text-4xl font-bold uppercase tracking-wide text-foreground">
+          <Link to="/" className="block mb-2">
+            <span className="font-condensed text-3xl font-bold uppercase tracking-wide text-foreground hover:text-primary transition-colors">
+              runngun.org
+            </span>
+          </Link>
+          <h1 className="font-condensed text-lg font-bold uppercase tracking-wide text-muted-foreground">
             Event Admin
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
