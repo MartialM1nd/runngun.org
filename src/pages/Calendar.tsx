@@ -88,10 +88,11 @@ const Calendar = () => {
 
   const renderCalendarGrid = () => {
     const cells: JSX.Element[] = [];
-    
+    const totalCells = 42; // always 6 rows × 7 cols for consistent height
+
     // Empty cells for days before the 1st of the month
     for (let i = 0; i < startDayOfWeek; i++) {
-      cells.push(<div key={`empty-${i}`} className="h-24 sm:h-28 border border-border/50 bg-card/30" />);
+      cells.push(<div key={`pre-${i}`} className="border-b border-r border-border/50 bg-card/30" />);
     }
     
     // Days of the month
@@ -105,11 +106,12 @@ const Calendar = () => {
           key={day}
           onClick={() => handleDayClick(day)}
           className={`
-            h-24 sm:h-28 border border-border/50 bg-card p-1.5 cursor-pointer
+            border-b border-r border-border/50 bg-card p-1.5 cursor-pointer
             transition-all duration-200 hover:border-primary/50
             ${hasEvents ? 'hover:bg-card/80' : ''}
             ${isTodayCell ? 'bg-primary/5 border-primary/30' : ''}
           `}
+          style={{ minHeight: '6rem' }}
         >
           <div className={`
             text-xs font-condensed font-bold mb-1 w-6 h-6 flex items-center justify-center rounded-full
@@ -135,6 +137,13 @@ const Calendar = () => {
           </div>
         </div>
       );
+    }
+
+    // Trailing empty cells to fill remaining grid
+    const filled = startDayOfWeek + daysInMonth;
+    const trailing = totalCells - filled;
+    for (let i = 0; i < trailing; i++) {
+      cells.push(<div key={`post-${i}`} className="border-b border-r border-border/50 bg-card/30" style={{ minHeight: '6rem' }} />);
     }
     
     return cells;
@@ -176,9 +185,9 @@ const Calendar = () => {
       </header>
 
       {/* Calendar */}
-      <main className="flex-1 container mx-auto px-4 py-8 max-w-5xl">
+      <main className="flex-1 container mx-auto px-4 py-8 max-w-5xl w-full">
         {/* Month navigation */}
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center justify-between mb-6 w-full">
           <Button
             variant="ghost"
             size="icon"
@@ -188,7 +197,7 @@ const Calendar = () => {
             <ChevronLeft className="h-5 w-5" />
           </Button>
           
-          <h2 className="font-condensed text-2xl font-bold uppercase tracking-wide text-foreground">
+          <h2 className="font-condensed text-2xl font-bold uppercase tracking-wide text-foreground min-w-[220px] text-center">
             {monthName} {viewDate.year}
           </h2>
           
@@ -203,7 +212,7 @@ const Calendar = () => {
         </div>
 
         {/* Day headers */}
-        <div className="grid grid-cols-7 mb-1">
+        <div className="grid grid-cols-7 w-full mb-1">
           {DAY_NAMES.map((day) => (
             <div
               key={day}
@@ -215,7 +224,7 @@ const Calendar = () => {
         </div>
 
         {/* Calendar grid */}
-        <div className="grid grid-cols-7 border-t border-l border-border rounded-t-lg overflow-hidden">
+        <div className="grid grid-cols-7 grid-rows-6 w-full border-t border-l border-border rounded-t-lg overflow-hidden">
           {renderCalendarGrid()}
         </div>
 
