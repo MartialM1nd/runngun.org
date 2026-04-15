@@ -61,7 +61,7 @@ const Index = () => {
           </p>
 
           {/* CTA row */}
-          <div className="mt-8 flex flex-wrap gap-3 items-center justify-center animate-fade-in">
+          <div className="mt-8 pb-8 flex flex-wrap gap-3 items-center justify-center animate-fade-in">
             <Button
               size="lg"
               className="font-condensed text-lg font-bold tracking-wide uppercase bg-primary text-primary-foreground hover:bg-primary/90 px-8"
