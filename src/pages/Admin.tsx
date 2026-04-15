@@ -276,6 +276,7 @@ function EventsTab() {
     setEditingEvent(ev);
     setTemplateToLoad(undefined);
     setShowForm(true);
+    window.scrollTo(0, 0);
   }
 
   function handleFormSuccess() {
@@ -327,6 +328,7 @@ function EventsTab() {
     };
     setTemplateToLoad(formState);
     setShowForm(true);
+    window.scrollTo(0, 0);
   }
 
   function handleDeleteTemplate(id: string) {
@@ -389,7 +391,7 @@ function EventsTab() {
         </div>
       ) : (
         <Button
-          onClick={() => { setEditingEvent(undefined); setTemplateToLoad(undefined); setShowForm(true); }}
+          onClick={() => { setEditingEvent(undefined); setTemplateToLoad(undefined); setShowForm(true); window.scrollTo(0, 0); }}
           className="font-condensed font-bold uppercase tracking-wide bg-primary text-primary-foreground hover:bg-primary/90"
         >
           <CalendarPlus className="w-4 h-4 mr-2" />
