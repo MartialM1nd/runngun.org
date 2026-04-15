@@ -84,8 +84,8 @@ function EventDetailView({ event }: { event: NostrEvent }) {
       {/* Hero banner */}
       <div className="relative isolate">
         {image ? (
-          <>
-            <div className="relative h-56 sm:h-72 overflow-hidden">
+          <div className="container mx-auto px-4 max-w-2xl">
+            <div className="relative h-56 sm:h-72 overflow-hidden rounded-lg mt-4">
               <img
                 src={image}
                 alt={title}
@@ -93,17 +93,19 @@ function EventDetailView({ event }: { event: NostrEvent }) {
               />
               <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent" />
             </div>
-          </>
+          </div>
         ) : (
-          <div className="h-32 bg-gradient-to-br from-[hsl(220_20%_5%)] via-[hsl(220_15%_8%)] to-[hsl(28_30%_8%)]">
-            <div
-              className="h-full opacity-[0.04]"
-              style={{
-                backgroundImage:
-                  'linear-gradient(hsl(32 95% 52% / 0.3) 1px, transparent 1px), linear-gradient(90deg, hsl(32 95% 52% / 0.3) 1px, transparent 1px)',
-                backgroundSize: '48px 48px',
-              }}
-            />
+          <div className="container mx-auto px-4 max-w-2xl">
+            <div className="h-32 bg-gradient-to-br from-[hsl(220_20%_5%)] via-[hsl(220_15%_8%)] to-[hsl(28_30%_8%)] rounded-lg mt-4">
+              <div
+                className="h-full opacity-[0.04]"
+                style={{
+                  backgroundImage:
+                    'linear-gradient(hsl(32 95% 52% / 0.3) 1px, transparent 1px), linear-gradient(90deg, hsl(32 95% 52% / 0.3) 1px, transparent 1px)',
+                  backgroundSize: '48px 48px',
+                }}
+              />
+            </div>
           </div>
         )}
       </div>
