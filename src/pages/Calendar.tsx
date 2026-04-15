@@ -237,7 +237,7 @@ const Calendar = () => {
 
       {/* Day detail dialog */}
       <Dialog open={selectedDay !== null} onOpenChange={() => setSelectedDay(null)}>
-        <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
+        <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="font-condensed text-xl font-bold uppercase tracking-wide">
               {selectedDay && isToday ? 'Today' : `${monthName} ${selectedDay}, ${viewDate.year}`}
