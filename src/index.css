@@ -1,5 +1,4 @@
 @tailwind base;
-@tailwind components;
 @tailwind utilities;
 
 @layer base {
@@ -31,22 +30,12 @@
     --destructive-foreground: 40 20% 92%;
 
     --border: 220 13% 18%;
-    --input: 220 13% 16%;
+    --input: 220 13% 18%;
     --ring: 32 95% 52%;
 
     --radius: 0.5rem;
-
-    --sidebar-background: 220 15% 6%;
-    --sidebar-foreground: 40 20% 88%;
-    --sidebar-primary: 32 95% 52%;
-    --sidebar-primary-foreground: 220 15% 7%;
-    --sidebar-accent: 220 13% 14%;
-    --sidebar-accent-foreground: 40 20% 88%;
-    --sidebar-border: 220 13% 16%;
-    --sidebar-ring: 32 95% 52%;
   }
 
-  /* Force dark everywhere — this site is dark-only */
   .dark {
     --background: 220 15% 7%;
     --foreground: 40 20% 92%;
@@ -73,17 +62,8 @@
     --destructive-foreground: 40 20% 92%;
 
     --border: 220 13% 18%;
-    --input: 220 13% 16%;
+    --input: 220 13% 18%;
     --ring: 32 95% 52%;
-
-    --sidebar-background: 220 15% 6%;
-    --sidebar-foreground: 40 20% 88%;
-    --sidebar-primary: 32 95% 52%;
-    --sidebar-primary-foreground: 220 15% 7%;
-    --sidebar-accent: 220 13% 14%;
-    --sidebar-accent-foreground: 40 20% 88%;
-    --sidebar-border: 220 13% 16%;
-    --sidebar-ring: 32 95% 52%;
   }
 }
 
@@ -92,27 +72,63 @@
     @apply border-border;
   }
 
-  html {
-    @apply dark;
-  }
-
   body {
     @apply bg-background text-foreground;
     font-feature-settings: "rlig" 1, "calt" 1;
   }
-}
 
-@layer utilities {
-  .font-display {
-    font-family: 'Barlow Condensed', 'Oswald', system-ui, sans-serif;
+  /* Custom scrollbar for webkit */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
   }
 
-  .text-amber {
-    color: hsl(32 95% 52%);
+  ::-webkit-scrollbar-track {
+    background: hsl(220 13% 14%);
   }
 
-  .bg-amber {
-    background-color: hsl(32 95% 52%);
+  ::-webkit-scrollbar-thumb {
+    background: hsl(220 13% 28%);
+    border-radius: 4px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: hsl(32 95% 52%);
+  }
+
+  /* Thin scrollbar for small scroll areas */
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+  }
+
+  /* Fade in animation */
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  .animate-fade-in {
+    animation: fade-in 0.5s ease-out;
+  }
+
+  @keyframes fade-in-up {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .animate-fade-in-up {
+    animation: fade-in-up 0.6s ease-out;
   }
 
   /* Subtle scanline texture for tactical feel */
@@ -124,5 +140,12 @@
       rgba(0, 0, 0, 0.03) 2px,
       rgba(0, 0, 0, 0.03) 4px
     );
+  }
+
+  /* Brighten native date/time picker icons */
+  input[type="date"]::-webkit-calendar-picker-indicator,
+  input[type="time"]::-webkit-calendar-picker-indicator {
+    filter: invert(1) brightness(1.5);
+    cursor: pointer;
   }
 }
