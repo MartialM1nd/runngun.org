@@ -284,8 +284,6 @@ const Calendar = () => {
             <span className="font-condensed font-bold tracking-wide uppercase text-foreground">
               runngun.org
             </span>
-            <span className="text-muted-foreground/50">·</span>
-            <span>runngun.org</span>
           </div>
           <div className="flex items-center gap-4">
             <Link
