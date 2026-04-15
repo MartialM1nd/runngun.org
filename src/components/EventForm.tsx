@@ -14,7 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Loader2, Plus, X, Save, Upload, Image as ImageIcon } from 'lucide-react';
+import { Loader2, Plus, X, Save, Upload, Image as ImageIcon, Calendar } from 'lucide-react';
 import type { CalendarEvent } from '@/hooks/useCalendarEvents';
 
 const US_TIMEZONES = [
@@ -344,13 +344,17 @@ export function EventForm({ existing, templateToLoad, onSuccess, onCancel, onSav
           <Label htmlFor="ev-start-date" className="font-condensed font-600 uppercase text-xs tracking-wide">
             Start Date <span className="text-primary">*</span>
           </Label>
-          <Input
-            id="ev-start-date"
-            type="date"
-            value={form.startDate}
-            onChange={(e) => handleStartDateChange(e.target.value)}
-            required
-          />
+          <div className="relative">
+            <Input
+              id="ev-start-date"
+              type="date"
+              value={form.startDate}
+              onChange={(e) => handleStartDateChange(e.target.value)}
+              className="pl-10"
+              required
+            />
+            <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-primary pointer-events-none" />
+          </div>
         </div>
         <div className="space-y-1.5">
           <Label htmlFor="ev-start-time" className="font-condensed font-600 uppercase text-xs tracking-wide">
@@ -371,12 +375,16 @@ export function EventForm({ existing, templateToLoad, onSuccess, onCancel, onSav
           <Label htmlFor="ev-end-date" className="font-condensed font-600 uppercase text-xs tracking-wide">
             End Date
           </Label>
-          <Input
-            id="ev-end-date"
-            type="date"
-            value={form.endDate}
-            onChange={(e) => setField('endDate', e.target.value)}
-          />
+          <div className="relative">
+            <Input
+              id="ev-end-date"
+              type="date"
+              value={form.endDate}
+              onChange={(e) => setField('endDate', e.target.value)}
+              className="pl-10"
+            />
+            <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-primary pointer-events-none" />
+          </div>
         </div>
         <div className="space-y-1.5">
           <Label htmlFor="ev-end-time" className="font-condensed font-600 uppercase text-xs tracking-wide">
