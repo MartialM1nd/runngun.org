@@ -1,11 +1,14 @@
+import { useState } from 'react';
 import { useSeoMeta } from '@unhead/react';
-import { Target, Shield } from 'lucide-react';
+import { Target, Shield, Zap, ChevronDown, ChevronUp, Globe, Key, Server } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useCalendarEvents, splitEvents } from '@/hooks/useCalendarEvents';
 import { EventCard, EventCardSkeleton } from '@/components/EventCard';
 import { Button } from '@/components/ui/button';
 
 const Index = () => {
+  const [showNostrInfo, setShowNostrInfo] = useState(false);
+
   useSeoMeta({
     title: 'runngun.org — Two-Gun Biathlon Events',
     description:
@@ -111,6 +114,75 @@ const Index = () => {
           )}
         </section>
       </main>
+
+      {/* ── Powered by Nostr ──────────────────────────────────────── */}
+      <section className="container mx-auto px-4 py-12 max-w-3xl">
+        <div className="rounded-lg border border-border bg-card/50">
+          <button
+            onClick={() => setShowNostrInfo((v) => !v)}
+            className="w-full flex items-center justify-between p-5 text-left hover:bg-card/80 transition-colors rounded-lg"
+          >
+            <div className="flex items-center gap-3">
+              <div className="flex items-center justify-center w-10 h-10 rounded-full bg-primary/10 border border-primary/20">
+                <Zap className="w-5 h-5 text-primary" />
+              </div>
+              <div>
+                <h2 className="font-condensed text-lg font-bold uppercase tracking-wide text-foreground">
+                  Powered by Nostr
+                </h2>
+                <p className="text-sm text-muted-foreground">
+                  Decentralized. Censorship-resistant. You own your data.
+                </p>
+              </div>
+            </div>
+            {showNostrInfo ? (
+              <ChevronUp className="w-5 h-5 text-muted-foreground" />
+            ) : (
+              <ChevronDown className="w-5 h-5 text-muted-foreground" />
+            )}
+          </button>
+          
+          {showNostrInfo && (
+            <div className="px-5 pb-5 space-y-4">
+              <p className="text-sm text-muted-foreground">
+                runngun.org runs on Nostr, a decentralized protocol that's fundamentally different from traditional platforms.
+              </p>
+              <div className="space-y-3">
+                <div className="flex items-start gap-3">
+                  <Key className="w-4 h-4 text-primary mt-0.5 shrink-0" />
+                  <div>
+                    <span className="text-sm font-medium text-foreground">Your identity, your keys</span>
+                    <p className="text-xs text-muted-foreground">No usernames or passwords — just a keypair that identifies you across the entire network.</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <Server className="w-4 h-4 text-primary mt-0.5 shrink-0" />
+                  <div>
+                    <span className="text-sm font-medium text-foreground">Your data, your relays</span>
+                    <p className="text-xs text-muted-foreground">Choose which servers store your content. Your data isn't locked into any single platform.</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <Globe className="w-4 h-4 text-primary mt-0.5 shrink-0" />
+                  <div>
+                    <span className="text-sm font-medium text-foreground">No central authority</span>
+                    <p className="text-xs text-muted-foreground">Anyone can publish. No account approval needed. No one can silence you.</p>
+                  </div>
+                </div>
+              </div>
+              <a
+                href="https://primal.net"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 text-sm font-medium text-primary hover:text-primary/80 transition-colors"
+              >
+                Get Started on Primal
+                <Zap className="w-4 h-4" />
+              </a>
+            </div>
+          )}
+        </div>
+      </section>
 
       {/* ── Footer ──────────────────────────────────────────────── */}
       <footer className="border-t border-border mt-20 py-8">
