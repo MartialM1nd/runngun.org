@@ -61,7 +61,8 @@ export function useAdminList() {
       setPersistedAdmins(allAdmins);
       return allAdmins;
     },
-    staleTime: 15_000,
+    staleTime: 0,
+    refetchOnMount: true,
     retry: 2,
     initialData: getInitialData(),
   });
