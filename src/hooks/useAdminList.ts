@@ -16,9 +16,13 @@ function getLegacyStoredAdmins(): string[] {
   }
 }
 
-function getInitialData(): string[] {
+export function getAllAdmins(): string[] {
   const legacyAdmins = getLegacyStoredAdmins();
   return [...new Set([...DEFAULT_ADMIN_PUBKEYS, ...legacyAdmins])];
+}
+
+function getInitialData(): string[] {
+  return getAllAdmins();
 }
 
 export function useAdminList() {
