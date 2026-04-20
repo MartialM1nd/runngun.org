@@ -78,7 +78,6 @@ async function geocodeLocation(location: string, nostrLocations: Record<string, 
 
       cache[cacheKey] = result;
       setGeocodeCache(cache);
-      console.log('Geocoded:', location, '->', result, '(via:', candidate, ')');
 
       return result;
     } catch {
@@ -86,7 +85,6 @@ async function geocodeLocation(location: string, nostrLocations: Record<string, 
     }
   }
 
-  console.warn('Geocoding failed for:', location);
   return null;
 }
 
