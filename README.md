@@ -15,14 +15,24 @@ Run & Gun is a decentralized event calendar built on the Nostr protocol. Events 
 - **shadcn/ui** - UI component library
 - **Nostrify** - Nostr protocol integration
 - **TanStack Query** - Data fetching and caching
+- **Leaflet** - Interactive maps
 
 ## Key Features
 
 ### Event Management
 - Create, edit, and delete calendar events (NIP-52 kind 31923)
 - Event templates saved to Nostr (NIP-78 kind 30078)
+- Custom pricing tag for events (non-standard)
 - Auto-set end date for weekend events (Saturday/Sunday → next day 5pm)
 - Automatic tags: `runngun`, `running`, `shooting`, `biathlon`
+
+### Interactive Map
+- Real-time geocoding via OpenStreetMap Nominatim
+- Geolocations cached in Nostr (kind 30078, d-tag: `runngun-geolocations`)
+- Dark mode tiles via CartoDB
+- Auto-centering to fit all event markers
+- Duplicate location offsetting (spread markers in a circle)
+- Hollow marker styling
 
 ### Nostr Integration
 - **Authentication**: NIP-07 signer extension (Alby, nos2x, etc.)
@@ -34,6 +44,7 @@ Run & Gun is a decentralized event calendar built on the Nostr protocol. Events 
 
 ### Admin System
 - Admin list stored on Nostr (NIP-78 kind 30078, d-tag: `runngun-admin-list`)
+- Site owner always has admin access (default)
 - Only the site owner can modify the admin list
 - Event templates stored on Nostr (any admin can modify)
 - Admin-only pages for event management
@@ -57,6 +68,8 @@ src/
 │   ├── useAdminMutations.ts
 │   ├── useTemplateList.ts
 │   ├── useTemplateMutations.ts
+│   ├── useGeolocationList.ts
+│   ├── useGeolocationMutations.ts
 │   └── ...
 ├── lib/             # Utilities
 │   ├── config.ts    # Site configuration
@@ -65,6 +78,7 @@ src/
     ├── Admin.tsx    # Admin panel
     ├── Calendar.tsx # Calendar view
     ├── Schedule.tsx # Schedule view
+    ├── Map.tsx     # Interactive map view
     └── ...
 ```
 
@@ -82,6 +96,7 @@ export const SITE_OWNER_PUBKEY = '1f273472730e3369aa7888e81203598e0330064264fb95
 |-----------|-----|------|-------|
 | Admin list | 78 | 30078 | `runngun-admin-list` |
 | Templates | 78 | 30078 | `runngun-event-templates` |
+| Geolocations | 78 | 30078 | `runngun-geolocations` |
 | Events | 52 | 31923 | Event-specific |
 | RSVPs | 52 | 31925 | Event-specific |
 
@@ -104,28 +119,27 @@ npm test
 ## Deployment
 
 1. Build the project: `npm run build`
-2. Copy `dist/` folder to web server (nginx, etc.)
-3. Configure nginx to serve static files and handle SPA routing
+2. Copy `dist/` folder to web server
+3. Configure web server to serve static files and handle SPA routing
 
-### nginx Configuration
+### Apache Configuration
 
-```nginx
-server {
-    listen 443 ssl;
-    server_name runngun.org;
-    root /opt/runngun.org/dist;
-    index index.html;
+```apache
+<VirtualHost *:80>
+    ServerName runngun.org
+    DocumentRoot /opt/runngun.org/dist
 
-    location / {
-        try_files $uri $uri/ /index.html;
-    }
+    <Directory /opt/runngun.org/dist>
+        Options -Indexes +FollowSymLinks
+        AllowOverride All
+        Require all granted
+    </Directory>
 
-    # Cache static assets
-    location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot|webp)$ {
-        expires 1y;
-        add_header Cache-Control "public, immutable";
-    }
-}
+    RewriteEngine On
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^/(.*)$ /index.html [L]
+</VirtualHost>
 ```
 
 ## Security
@@ -133,7 +147,8 @@ server {
 - All admin queries filter by author pubkey to prevent spoofing
 - Admin list modifications restricted to site owner only
 - Template modifications available to any admin
-- Content Security Policy headers configured in nginx
+- Geolocations verified against site owner's kind 30078 events
+- Content Security Policy headers configured in web server
 
 ## License
 
