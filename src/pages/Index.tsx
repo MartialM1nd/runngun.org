@@ -106,11 +106,20 @@ const Index = () => {
           )}
 
           {!isLoading && !isError && upcoming.length > 0 && (
-            <div className="space-y-3">
-              {upcoming.slice(0, 10).map((ev) => (
-                <EventCard key={ev.event.id} calEvent={ev} />
-              ))}
-            </div>
+            <>
+              <div className="space-y-3">
+                {upcoming.slice(0, 10).map((ev) => (
+                  <EventCard key={ev.event.id} calEvent={ev} />
+                ))}
+              </div>
+              {upcoming.length > 10 && (
+                <div className="mt-6 text-center">
+                  <Button asChild variant="outline" className="font-condensed font-bold uppercase tracking-wide">
+                    <Link to="/schedule">See Them All ({upcoming.length} Events)</Link>
+                  </Button>
+                </div>
+              )}
+            </>
           )}
         </section>
       </main>
