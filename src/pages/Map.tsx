@@ -7,7 +7,6 @@ import L from 'leaflet';
 
 import { useCalendarEvents, splitEvents, type CalendarEvent } from '@/hooks/useCalendarEvents';
 import { Button } from '@/components/ui/button';
-import 'leaflet/dist/leaflet.css';
 
 interface GeocodedLocation {
   lat: number;
