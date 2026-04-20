@@ -3,6 +3,9 @@ import { createRoot } from 'react-dom/client';
 // Import polyfills first
 import './lib/polyfills.ts';
 
+// Leaflet CSS
+import 'leaflet/dist/leaflet.css';
+
 import '@fontsource-variable/inter';
 import '@fontsource/barlow-condensed/400.css';
 import '@fontsource/barlow-condensed/600.css';
