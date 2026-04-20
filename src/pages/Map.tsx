@@ -251,8 +251,8 @@ export default function MapPage() {
   });
 
   const { data: events, isLoading: eventsLoading } = useCalendarEvents();
-  const { data: nostrLocations } = useGeolocationList();
-  const [locations, setLocations] = useState<Record<string, GeocodedLocation>>(() => getGeocodeCache());
+  const { data: nostrLocations, isLoading: nostrLoading } = useGeolocationList();
+  const [locations, setLocations] = useState<Record<string, GeocodedLocation>>({});
   const [isGeocoding, setIsGeocoding] = useState(false);
   const [progress, setProgress] = useState(0);
 
@@ -260,33 +260,26 @@ export default function MapPage() {
   const allEvents = [...upcoming, ...past];
   const eventsWithLocation = allEvents.filter((ev) => ev.location);
 
-  console.log('Events with location:', eventsWithLocation.length, 'of', allEvents.length);
-  console.log('Locations:', eventsWithLocation.map((ev) => ev.location));
-  console.log('Nostr geolocations:', nostrLocations);
-
   useEffect(() => {
+    // Wait until both events and Nostr locations are loaded before deciding what to geocode
+    if (eventsLoading || nostrLoading) return;
     if (!eventsWithLocation.length) return;
 
-    const mergedCache = getGeocodeCache();
+    // Build merged lookup: Nostr geolocations take priority, then localStorage cache
+    const localCache = getGeocodeCache();
+    const mergedCache: Record<string, GeocodedLocation> = { ...localCache };
 
     if (nostrLocations) {
       Object.entries(nostrLocations).forEach(([key, loc]) => {
-        if (!mergedCache[key]) {
-          mergedCache[key] = loc;
-        }
+        mergedCache[key] = loc; // Nostr wins
       });
     }
 
     const uniqueLocs = [...new Set(eventsWithLocation.map((ev) => ev.location!.toLowerCase().trim()))];
     const needGeocoding = uniqueLocs.filter((loc) => !mergedCache[loc]);
 
-    console.log('Merged locations:', Object.keys(mergedCache).length);
-    console.log('Unique locations found:', uniqueLocs.length);
-    console.log('Need geocoding:', needGeocoding);
-
     if (needGeocoding.length === 0) {
       setLocations(mergedCache);
-      console.log('Using cached locations');
       return;
     }
 
@@ -306,12 +299,15 @@ export default function MapPage() {
         )?.location;
 
         if (originalLocation) {
-          await geocodeLocation(originalLocation, nostrLocations || {});
+          const result = await geocodeLocation(originalLocation, nostrLocations || {});
+          if (result) {
+            mergedCache[loc] = result;
+          }
         }
       }
 
       if (!cancelled) {
-        setLocations(getGeocodeCache());
+        setLocations({ ...mergedCache });
         setIsGeocoding(false);
       }
     };
@@ -321,7 +317,7 @@ export default function MapPage() {
     return () => {
       cancelled = true;
     };
-  }, [eventsWithLocation.length]);
+  }, [eventsLoading, nostrLoading, eventsWithLocation.length]);
 
   return (
     <div className="min-h-screen bg-background font-sans flex flex-col">
