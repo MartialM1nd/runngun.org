@@ -8,6 +8,7 @@ import Schedule from "./pages/Schedule";
 import { NIP19Page } from "./pages/NIP19Page";
 import NotFound from "./pages/NotFound";
 import RSS from "./pages/RSS";
+import MapPage from "./pages/Map";
 
 export function AppRouter() {
   return (
@@ -19,6 +20,8 @@ export function AppRouter() {
         <Route path="/schedule" element={<Schedule />} />
         {/* Calendar page */}
         <Route path="/calendar" element={<Calendar />} />
+        {/* Map page */}
+        <Route path="/map" element={<MapPage />} />
         {/* Admin panel — Nostr auth gated */}
         <Route path="/admin" element={<Admin />} />
         {/* RSS feed */}

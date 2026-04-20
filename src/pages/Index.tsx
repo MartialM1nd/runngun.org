@@ -77,7 +77,14 @@ const Index = () => {
             >
               <a href="/calendar">View Calendar</a>
             </Button>
-            
+            <Button
+              size="lg"
+              variant="outline"
+              className="font-condensed text-lg font-bold tracking-wide uppercase border-primary/40 text-primary hover:bg-primary/10 hover:border-primary/60 px-8"
+              asChild
+            >
+              <a href="/map">View Map</a>
+            </Button>
           </div>
         </div>
       </header>
