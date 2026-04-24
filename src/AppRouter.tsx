@@ -25,6 +25,8 @@ export function AppRouter() {
         {/* Admin panel — Nostr auth gated */}
         <Route path="/admin" element={<Admin />} />
         {/* RSS feed */}
+        <Route path="/feed" element={<RSS />} />
+        {/* Legacy RSS route */}
         <Route path="/rss.xml" element={<RSS />} />
         {/* NIP-19 route for naddr1 calendar event detail pages */}
         <Route path="/:nip19" element={<NIP19Page />} />

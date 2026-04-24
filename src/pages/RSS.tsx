@@ -1,11 +1,9 @@
 import { useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useNostr } from '@nostrify/react';
 import { nip19 } from 'nostr-tools';
 
 const RSS = () => {
   const { nostr } = useNostr();
-  const navigate = useNavigate();
   const hasGenerated = useRef(false);
 
   useEffect(() => {
@@ -37,9 +35,11 @@ const RSS = () => {
           const d = ev.tags.find(([k]) => k === 'd')?.[1] || '';
           const title = ev.tags.find(([k]) => k === 'title')?.[1] || 'Untitled Event';
           const summary = ev.tags.find(([k]) => k === 'summary')?.[1] || '';
+          const content = ev.content || '';
           const location = ev.tags.find(([k]) => k === 'location')?.[1] || '';
           const price = ev.tags.find(([k]) => k === 'price')?.[1] || '';
           const start = parseInt(ev.tags.find(([k]) => k === 'start')?.[1] || '0');
+          const end = ev.tags.find(([k]) => k === 'end')?.[1];
 
           const naddr = nip19.naddrEncode({
             kind: 31923,
@@ -48,12 +48,16 @@ const RSS = () => {
           });
           const link = `${siteUrl}/${naddr}`;
           const pubDate = new Date(start * 1000).toUTCString();
+          const startDate = new Date(start * 1000).toISOString();
+          const endDate = end ? new Date(parseInt(end) * 1000).toISOString() : '';
 
           let description = '';
-          if (summary) description += `<p>${summary}</p>`;
-          if (start) description += `<p><strong>Date:</strong> ${new Date(start * 1000).toLocaleDateString()}</p>`;
-          if (location) description += `<p><strong>Location:</strong> ${escapeHtml(location)}</p>`;
-          if (price) description += `<p><strong>Price:</strong> ${escapeHtml(price)}</p>`;
+          if (summary) description += `${summary}\n`;
+          if (start) description += `Date: ${new Date(start * 1000).toLocaleDateString()}\n`;
+          if (endDate) description += `Ends: ${endDate}\n`;
+          if (location) description += `Location: ${location}\n`;
+          if (price) description += `Price: ${price}\n`;
+          if (content) description += `\n${content}`;
 
           return `
     <item>
@@ -62,33 +66,47 @@ const RSS = () => {
       <guid isPermaLink="true">${link}</guid>
       <pubDate>${pubDate}</pubDate>
       <description><![CDATA[${description}]]></description>
+      <category>runngun</category>
+      <category>biathlon</category>
+      <category>shooting</category>
+      <category>running</category>
+      <dc:creator>runngun.org</dc:creator>
+      ${start ? `<startDate>${startDate}</startDate>` : ''}
+      ${endDate ? `<endDate>${endDate}</endDate>` : ''}
     </item>`;
         }).join('');
 
         const feed = `<?xml version="1.0" encoding="UTF-8"?>
-<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+<rss version="2.0" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>runngun.org - Upcoming Events</title>
-    <link>${siteUrl}</link>
+    <link>https://runngun.org</link>
     <description>The official schedule for Run &amp; Gun two-gun biathlon competition events.</description>
     <language>en-us</language>
     <lastBuildDate>${buildDate}</lastBuildDate>
-    <atom:link href="${siteUrl}/rss.xml" rel="self" type="application/rss+xml"/>
+    <managingEditor>admin@runngun.org</managingEditor>
+    <webMaster>admin@runngun.org</webMaster>
+    <atom:link href="https://runngun.org/feed" rel="self" type="application/rss+xml"/>
+    <image>
+      <url>https://runngun.org/logo-vector-circle.png</url>
+      <title>runngun.org</title>
+      <link>https://runngun.org</link>
+    </image>
     ${items}
   </channel>
 </rss>`;
 
-        const blob = new Blob([feed], { type: 'application/xml' });
+        const blob = new Blob([feed], { type: 'application/rss+xml; charset=utf-8' });
         const url = URL.createObjectURL(blob);
         window.location.href = url;
       } catch (err) {
         console.error('RSS generation error:', err);
-        navigate('/');
+        window.location.href = '/';
       }
     };
 
     generateRSS();
-  }, [nostr, navigate]);
+  }, [nostr]);
 
   return (
     <div className="min-h-screen bg-background font-sans flex items-center justify-center">
@@ -98,14 +116,5 @@ const RSS = () => {
     </div>
   );
 };
-
-function escapeHtml(text: string): string {
-  return text
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
-}
 
 export default RSS;
