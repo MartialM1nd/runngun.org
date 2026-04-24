@@ -1,10 +1,21 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNostr } from '@nostrify/react';
 import { nip19 } from 'nostr-tools';
+
+function escapeXml(text: string): string {
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
 
 const RSS = () => {
   const { nostr } = useNostr();
   const hasGenerated = useRef(false);
+  const [feed, setFeed] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (hasGenerated.current) return;
@@ -76,7 +87,7 @@ const RSS = () => {
     </item>`;
         }).join('');
 
-        const feed = `<?xml version="1.0" encoding="UTF-8"?>
+        const rssFeed = `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>runngun.org - Upcoming Events</title>
@@ -96,22 +107,50 @@ const RSS = () => {
   </channel>
 </rss>`;
 
-        const blob = new Blob([feed], { type: 'application/rss+xml; charset=utf-8' });
-        const url = URL.createObjectURL(blob);
-        window.location.href = url;
+        setFeed(rssFeed);
       } catch (err) {
         console.error('RSS generation error:', err);
-        window.location.href = '/';
+        setError('Failed to generate RSS feed');
       }
     };
 
     generateRSS();
   }, [nostr]);
 
+  if (error) {
+    return (
+      <div className="min-h-screen bg-background font-sans flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-destructive">{error}</p>
+          <a href="/" className="text-primary hover:underline mt-4 block">← Return home</a>
+        </div>
+      </div>
+    );
+  }
+
+  if (!feed) {
+    return (
+      <div className="min-h-screen bg-background font-sans flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-muted-foreground">Generating RSS feed...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-background font-sans flex items-center justify-center">
-      <div className="text-center">
-        <p className="text-muted-foreground">Generating RSS feed...</p>
+    <div className="min-h-screen bg-background font-sans">
+      <div className="container mx-auto px-4 py-6">
+        <div className="flex items-center justify-between mb-6">
+          <h1 className="font-condensed text-2xl font-bold uppercase">RSS Feed</h1>
+          <a href="/" className="text-muted-foreground hover:text-primary">← Back to site</a>
+        </div>
+        <pre className="bg-card border border-border p-4 rounded-lg overflow-x-auto text-sm font-mono whitespace-pre-wrap">
+          {feed}
+        </pre>
+        <p className="text-muted-foreground text-sm mt-4">
+          Copy this URL into your RSS reader: <code className="bg-muted px-2 py-1 rounded">https://runngun.org/feed</code>
+        </p>
       </div>
     </div>
   );
