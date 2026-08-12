@@ -231,6 +231,8 @@ Keep `/rss.xml` outside the SPA fallback. Run the generator once before enabling
 - External URLs and images are sanitized before rendering where applicable.
 - The application uses a restrictive Content Security Policy in `index.html`.
 
+Report suspected vulnerabilities privately according to the [security policy](./SECURITY.md). Do not disclose security issues in public GitHub issues or discussions.
+
 ## License
 
 [BSD 3-Clause](./LICENSE)
