@@ -233,4 +233,4 @@ Keep `/rss.xml` outside the SPA fallback. Run the generator once before enabling
 
 ## License
 
-ISC
+[BSD 3-Clause](./LICENSE)
