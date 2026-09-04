@@ -149,48 +149,63 @@
     cursor: pointer;
   }
 
-  /* Dark mode Leaflet popups - override default white background */
-  .leaflet-popup-content-wrapper,
-  .leaflet-popup-tip {
-    background: #1a1a1a !important;
-    color: #e5e5e5 !important;
-    box-shadow: none !important;
+  .event-map-marker {
+    width: 16px;
+    height: 16px;
+    padding: 0;
+    cursor: pointer;
+    border-radius: 9999px;
+    border-width: 3px;
+    background: transparent;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
   }
 
-  .leaflet-popup-content-wrapper {
-    padding: 0 !important;
+  .event-map-marker-upcoming {
+    border-color: #dc5522;
+  }
+
+  .event-map-marker-past {
+    border-color: #6b7280;
+  }
+
+  .event-map-marker:focus-visible {
+    outline: 3px solid #fff;
+    outline-offset: 3px;
+  }
+
+  .event-map-popup .maplibregl-popup-content {
+    background: #1a1a1a !important;
+    color: #e5e5e5 !important;
+    padding: 12px 14px !important;
     border: none !important;
     border-radius: 8px !important;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5) !important;
   }
 
-  .leaflet-popup-tip-container {
-    background: transparent !important;
-    box-shadow: none !important;
+  .event-map-popup.maplibregl-popup-anchor-top .maplibregl-popup-tip {
+    border-bottom-color: #1a1a1a;
   }
 
-  .leaflet-popup-tip {
-    background: #1a1a1a !important;
-    padding: 0 !important;
-    border: none !important;
+  .event-map-popup.maplibregl-popup-anchor-bottom .maplibregl-popup-tip {
+    border-top-color: #1a1a1a;
   }
 
-  .leaflet-popup-content {
-    margin: 12px 14px !important;
-    color: #e5e5e5 !important;
+  .event-map-popup.maplibregl-popup-anchor-left .maplibregl-popup-tip {
+    border-right-color: #1a1a1a;
   }
 
-  .leaflet-popup-close-button {
+  .event-map-popup.maplibregl-popup-anchor-right .maplibregl-popup-tip {
+    border-left-color: #1a1a1a;
+  }
+
+  .event-map-popup .maplibregl-popup-close-button {
     color: #999 !important;
+    padding: 2px 6px;
   }
 
-  .leaflet-popup-close-button:hover {
+  .event-map-popup .maplibregl-popup-close-button:hover {
+    background: transparent;
     color: #fff !important;
-  }
-
-  .leaflet-container a.leaflet-popup-close-button {
-    background: transparent !important;
-    color: #999 !important;
   }
 
 }

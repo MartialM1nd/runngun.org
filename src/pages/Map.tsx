@@ -1,7 +1,13 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useSeoMeta } from '@unhead/react';
 import { Link } from 'react-router-dom';
-import L from 'leaflet';
+import {
+  LngLatBounds,
+  Map as MapLibreMap,
+  Marker,
+  NavigationControl,
+  Popup,
+} from 'maplibre-gl';
 
 import { useScheduleEvents } from '@/hooks/useScheduleEvents';
 import {
@@ -14,14 +20,15 @@ import { useLocationResolutions } from '@/hooks/useLocationResolutions';
 import { normalizeLocation, type LocationResolution } from '@/lib/location-resolution';
 import { Button } from '@/components/ui/button';
 
-function createMarkerIcon(isPast: boolean): L.DivIcon {
-  const color = isPast ? '#6b7280' : '#dc5522';
-  return L.divIcon({
-    className: 'custom-marker',
-    html: `<div style="width:16px; height:16px; border-radius:50%; border:3px solid ${color}; background:transparent; box-shadow:0 2px 6px rgba(0,0,0,0.5);"></div>`,
-    iconSize: [16, 16],
-    iconAnchor: [8, 8],
-  });
+const CARTO_API_KEY = import.meta.env.VITE_CARTO_BASEMAP_API_KEY?.trim();
+
+function createMarkerElement(isPast: boolean, title: string): HTMLButtonElement {
+  const marker = document.createElement('button');
+  marker.type = 'button';
+  marker.className = `event-map-marker ${isPast ? 'event-map-marker-past' : 'event-map-marker-upcoming'}`;
+  marker.title = title;
+  marker.setAttribute('aria-label', `View ${title}`);
+  return marker;
 }
 
 function buildPopupContent(calEvent: ScheduleEvent, resolution: LocationResolution): string {
@@ -54,49 +61,47 @@ interface MapViewProps {
 
 function MapView({ events, locations }: MapViewProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
-  const mapRef = useRef<L.Map | null>(null);
-  const markersRef = useRef<L.Marker[]>([]);
+  const mapRef = useRef<MapLibreMap | null>(null);
+  const markersRef = useRef<Marker[]>([]);
+  const [mapError, setMapError] = useState<string | null>(null);
 
-  // Initialize map
   useEffect(() => {
-    if (!mapContainerRef.current || mapRef.current) return;
+    if (!CARTO_API_KEY || !mapContainerRef.current || mapRef.current) return;
 
-    const map = L.map(mapContainerRef.current, {
-      center: [39.8283, -98.5795],
-      zoom: 4,
-      zoomControl: true,
-    });
-
-    // Dark mode tiles from CartoDB
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
-      maxZoom: 19,
-    }).addTo(map);
-
-    // Style popup wrapper whenever a popup opens
-    map.on('popupopen', () => {
-      document.querySelectorAll('.leaflet-popup-content-wrapper').forEach((el) => {
-        (el as HTMLElement).style.cssText = 'background:#1a1a1a !important; border:none !important; border-radius:8px !important; box-shadow:0 4px 20px rgba(0,0,0,0.6) !important; padding:8px 0 !important;';
+    let map: MapLibreMap;
+    try {
+      map = new MapLibreMap({
+        container: mapContainerRef.current,
+        style: `https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json?key=${encodeURIComponent(CARTO_API_KEY)}`,
+        center: [-98.5795, 39.8283],
+        zoom: 4,
+        attributionControl: { compact: true },
       });
-      document.querySelectorAll('.leaflet-popup-tip').forEach((el) => {
-        (el as HTMLElement).style.cssText = 'background:#1a1a1a !important; border:none !important; box-shadow:none !important;';
+      map.addControl(new NavigationControl(), 'top-left');
+      map.on('error', () => {
+        if (!map.isStyleLoaded()) {
+          setMapError('The vector basemap could not be loaded. Check the CARTO API key and network connection.');
+        }
       });
-    });
-
-    mapRef.current = map;
+      mapRef.current = map;
+    } catch (error) {
+      console.error('Failed to initialize event map:', error);
+      setMapError('This browser could not initialize the vector map. WebGL may be unavailable.');
+      return;
+    }
 
     return () => {
+      markersRef.current.forEach((marker) => marker.remove());
+      markersRef.current = [];
       map.remove();
       mapRef.current = null;
     };
   }, []);
 
-  // Update markers when data changes
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
 
-    // Clear existing markers
     markersRef.current.forEach((m) => m.remove());
     markersRef.current = [];
 
@@ -137,26 +142,46 @@ function MapView({ events, locations }: MapViewProps) {
         lng = loc.lng + OFFSET * Math.cos(angle);
       }
 
-      validLocations.push([lat, lng]);
+      validLocations.push([lng, lat]);
 
       const isPast = getScheduleEventState(ev) === 'past';
-
-      const marker = L.marker([lat, lng], {
-        icon: createMarkerIcon(isPast),
-      }).addTo(map);
-
-      marker.bindPopup(buildPopupContent(ev, loc));
+      const marker = new Marker({
+        element: createMarkerElement(isPast, ev.title),
+        anchor: 'center',
+      })
+        .setLngLat([lng, lat])
+        .setPopup(
+          new Popup({ className: 'event-map-popup', offset: 12 })
+            .setHTML(buildPopupContent(ev, loc)),
+        )
+        .addTo(map);
       markersRef.current.push(marker);
     });
 
-    // Auto-fit bounds to show all markers
     if (validLocations.length > 0) {
-      const bounds = L.latLngBounds(validLocations);
-      map.fitBounds(bounds, { padding: [50, 50] });
+      const bounds = new LngLatBounds();
+      validLocations.forEach((coordinates) => bounds.extend(coordinates));
+      map.fitBounds(bounds, { padding: 50, maxZoom: 12 });
     }
   }, [events, locations]);
 
-  return <div ref={mapContainerRef} className="absolute inset-0" />;
+  const error = !CARTO_API_KEY
+    ? 'The event map is not configured. Set VITE_CARTO_BASEMAP_API_KEY when building the site.'
+    : mapError;
+
+  return (
+    <div className="absolute inset-0 bg-[hsl(220_15%_8%)]">
+      <div ref={mapContainerRef} className="absolute inset-0" />
+      {error && (
+        <div className="absolute inset-0 z-10 flex items-center justify-center bg-background/90 px-6">
+          <div role="alert" className="max-w-md rounded-xl border border-border bg-card p-6 text-center shadow-xl">
+            <p className="font-condensed text-lg font-bold uppercase tracking-wide text-foreground">Map unavailable</p>
+            <p className="mt-2 text-sm text-muted-foreground">{error}</p>
+          </div>
+        </div>
+      )}
+    </div>
+  );
 }
 
 export default function MapPage() {
