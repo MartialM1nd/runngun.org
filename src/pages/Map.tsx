@@ -7,7 +7,9 @@ import {
   Marker,
   NavigationControl,
   Popup,
+  setWorkerUrl,
 } from 'maplibre-gl';
+import maplibreWorkerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url';
 
 import { useScheduleEvents } from '@/hooks/useScheduleEvents';
 import {
@@ -19,6 +21,8 @@ import {
 import { useLocationResolutions } from '@/hooks/useLocationResolutions';
 import { normalizeLocation, type LocationResolution } from '@/lib/location-resolution';
 import { Button } from '@/components/ui/button';
+
+setWorkerUrl(maplibreWorkerUrl);
 
 const CARTO_API_KEY = import.meta.env.VITE_CARTO_BASEMAP_API_KEY?.trim();
 
